@@ -1,0 +1,70 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{% if user.role == "AGENT" %}My Dashboard{% else %}Team Dashboard{% endif %}</h1>
+      <p class="page-subtitle">Live CRM summary for campaigns, leads, email, calls, and activity.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'core:lead-list' %}">View leads</a>
+  </div>
+
+  <section class="grid stats">
+    <div class="stat">
+      <div class="stat-value">{{ stats.total_leads }}</div>
+      <div class="stat-label">{% if user.role == "AGENT" %}Assigned leads{% else %}Total leads{% endif %}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ stats.new_leads }}</div>
+      <div class="stat-label">New leads</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ stats.email_sent }}</div>
+      <div class="stat-label">Emails sent</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ stats.contacted }}</div>
+      <div class="stat-label">Phones called</div>
+    </div>
+  </section>
+
+  <section class="grid two">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Pipeline</div>
+      </div>
+      <div class="panel-body">
+        {% for row in status_rows %}
+          <div class="progress-row">
+            <div>{{ row.label }}</div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: {{ row.percent }}%"></div>
+            </div>
+            <div class="muted small">{{ row.count }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Recent activity</div>
+        <a class="btn btn-secondary btn-small" href="{% url 'core:activity-list' %}">View all</a>
+      </div>
+      <div class="panel-body">
+        {% if recent_activity %}
+          <div class="timeline">
+            {% for item in recent_activity %}
+              <div class="timeline-item">
+                <div><strong>{{ item.get_action_type_display }}</strong>{% if item.lead %} on {{ item.lead }}{% endif %}</div>
+                <div class="small muted">{{ item.user|default:"System" }} - {{ item.created_at|date:"M j, Y H:i" }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">No activity yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

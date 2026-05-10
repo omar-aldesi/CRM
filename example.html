@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PureCode CRM — Live System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07080b;--bg2:#0e0f14;--bg3:#151619;--bg4:#1c1d23;--bg5:#232530;
+  --primary:#00e5a0;--pd:rgba(0,229,160,0.1);--pg:rgba(0,229,160,0.18);
+  --orange:#ff6b35;--od:rgba(255,107,53,0.12);
+  --blue:#4ea8de;--bld:rgba(78,168,222,0.12);
+  --purple:#a78bfa;--pud:rgba(167,139,250,0.12);
+  --gold:#f5c842;--gld:rgba(245,200,66,0.12);
+  --red:#ff4d6a;--rd:rgba(255,77,106,0.12);
+  --text:#edeae3;--t2:#8a8780;--t3:#4a4845;
+  --border:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.1);
+  --r:8px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;overflow:hidden}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px}
+button,input,select,textarea{font-family:inherit}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--bg);position:relative}
+#login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(0,229,160,0.04) 0%,transparent 60%)}
+.lcard{background:var(--bg2);border:1px solid var(--b2);border-radius:14px;padding:36px;width:360px;position:relative;z-index:1}
+.llogo{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:var(--primary);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px}
+.ltitle{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:20px}
+.ll{display:block;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px;margin-top:14px}
+.li{width:100%;background:var(--bg3);border:1px solid var(--b2);border-radius:6px;padding:10px 12px;color:var(--text);outline:none;font-size:13px}
+.li:focus{border-color:rgba(0,229,160,0.4)}
+select.li{cursor:pointer;appearance:none}
+.lbtn{width:100%;margin-top:20px;background:var(--primary);color:#000;border:none;border-radius:6px;padding:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:.04em}
+.lbtn:hover{opacity:.85}
+.lerr{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+/* APP */
+#app{display:none;height:100vh;flex-direction:column}
+.top{height:50px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:14px;flex-shrink:0;z-index:50}
+.top-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:var(--primary);letter-spacing:.09em}
+.top-sep{width:1px;height:18px;background:var(--border);margin:0 2px}
+.top-pg{font-size:12px;color:var(--t2)}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.top-usr{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:100px;padding:4px 10px 4px 5px;font-size:11px;color:var(--t2)}
+.av{width:20px;height:20px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:9px;color:#000;flex-shrink:0}
+.logoutb{background:transparent;border:1px solid var(--border);border-radius:5px;padding:4px 9px;font-size:11px;color:var(--t3);cursor:pointer}
+.logoutb:hover{color:var(--t2);border-color:var(--b2)}
+
+.body{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sb{width:210px;min-width:210px;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:10px 0;flex-shrink:0}
+.sb-sec{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);padding:14px 14px 5px}
+.nb{display:flex;align-items:center;gap:9px;width:100%;padding:7px 14px;background:transparent;border:none;border-left:2px solid transparent;color:var(--t2);font-size:12px;text-align:left;cursor:pointer;transition:all .1s}
+.nb:hover{color:var(--text);background:rgba(255,255,255,.02)}
+.nb.on{color:var(--primary);background:var(--pd);border-left-color:var(--primary)}
+.ni{font-size:14px;width:18px;text-align:center}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:20px 24px}
+.pg{display:none}.pg.on{display:block}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.pt{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.ps{font-size:12px;color:var(--t2);margin-top:2px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:inherit;letter-spacing:.02em;transition:all .12s;white-space:nowrap}
+.bp{background:var(--primary);color:#000}.bp:hover{opacity:.85}
+.bs{background:var(--bg3);color:var(--t2);border:1px solid var(--border)}.bs:hover{color:var(--text);border-color:var(--b2)}
+.bd{background:var(--rd);color:var(--red);border:1px solid rgba(255,77,106,.25)}.bd:hover{background:rgba(255,77,106,.2)}
+.bsm{padding:4px 9px;font-size:11px}
+.bxs{padding:2px 7px;font-size:10px;border-radius:4px}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.sn{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1}
+.sl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+.sc.g .sn{color:var(--primary)}.sc.o .sn{color:var(--orange)}.sc.b .sn{color:var(--blue)}.sc.gd .sn{color:var(--gold)}
+
+/* FILTERS */
+.fb{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fi{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:6px 10px;color:var(--text);outline:none;font-size:12px}
+.fi:focus{border-color:rgba(0,229,160,.35)}
+.fsel{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:6px 10px;color:var(--text);outline:none;font-size:12px;cursor:pointer;appearance:none;min-width:130px}
+.fcount{margin-left:auto;font-size:11px;color:var(--t3);font-family:'DM Mono',monospace}
+
+/* TABLE */
+.tw{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg3);padding:9px 12px;text-align:left;font-family:'DM Mono',monospace;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 12px;font-size:12px;color:var(--t2);border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+td.nm{color:var(--text);font-weight:500}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 7px;border-radius:100px;font-size:9px;font-weight:700;letter-spacing:.05em;white-space:nowrap}
+.bNew{background:var(--bld);color:var(--blue);border:1px solid rgba(78,168,222,.3)}
+.bCalled{background:var(--gld);color:var(--gold);border:1px solid rgba(245,200,66,.3)}
+.bNoAnswer{background:var(--bg4);color:var(--t3);border:1px solid var(--border)}
+.bInterested{background:var(--pd);color:var(--primary);border:1px solid rgba(0,229,160,.3)}
+.bDemoBooked{background:var(--pud);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.bClosed{background:rgba(0,229,160,.2);color:#00c87a;border:1px solid rgba(0,200,122,.4)}
+.bNotQualified{background:var(--rd);color:var(--red);border:1px solid rgba(255,77,106,.3)}
+.bT1{background:rgba(0,229,160,.15);color:var(--primary);border:1px solid rgba(0,229,160,.3)}
+.bT2{background:var(--gld);color:var(--gold);border:1px solid rgba(245,200,66,.3)}
+.bT3{background:var(--bg4);color:var(--t3);border:1px solid var(--border)}
+.bWarn{background:var(--rd);color:var(--red);border:1px solid rgba(255,77,106,.3)}
+.bEmail{background:var(--bld);color:var(--blue);border:1px solid rgba(78,168,222,.3)}
+
+/* DRAWER */
+.dov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;backdrop-filter:blur(3px)}
+.dr{position:fixed;right:0;top:0;bottom:0;width:490px;background:var(--bg2);border-left:1px solid var(--b2);z-index:201;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1)}
+.dr.open{transform:translateX(0)}
+.drh{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+.drt{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+.drs{font-size:11px;color:var(--t3);margin-top:2px}
+.drcl{background:var(--bg4);border:1px solid var(--border);border-radius:5px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--t2);cursor:pointer;flex-shrink:0}
+.drb{flex:1;overflow-y:auto;padding:18px 20px}
+.drf{padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0}
+
+.lig{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px}
+.li2{background:var(--bg3);border-radius:5px;padding:9px 11px}
+.lil{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.liv{font-size:12px;color:var(--text);font-weight:500}
+.liv.ph{color:var(--primary);font-family:'DM Mono',monospace}
+
+.nt-box{background:var(--bg3);border-radius:5px;padding:11px 13px;margin-bottom:8px;border-left:3px solid var(--border)}
+.nt-box.mine{border-left-color:var(--primary)}
+.nt-meta{font-size:10px;color:var(--t3);margin-bottom:4px}
+.nt-txt{font-size:12px;color:var(--text);line-height:1.65}
+.nt-empty{font-size:12px;color:var(--t3);text-align:center;padding:20px 0;font-style:italic}
+
+.oc-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.oc-btn{padding:4px 10px;background:var(--bg4);border:1px solid var(--border);border-radius:100px;font-size:11px;color:var(--t2);cursor:pointer;transition:all .1s;font-family:inherit}
+.oc-btn:hover{border-color:var(--b2);color:var(--text)}
+.oc-btn.sel{background:var(--pd);border-color:rgba(0,229,160,.4);color:var(--primary)}
+
+.ntarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;color:var(--text);outline:none;resize:none;font-size:12px;line-height:1.6}
+.ntarea:focus{border-color:rgba(0,229,160,.35)}
+
+/* EMAIL PANEL */
+.em-panel{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px}
+.em-label{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.em-body{font-size:12px;color:var(--t2);line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto}
+.em-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.em-status{font-size:11px;color:var(--primary);margin-top:6px;display:none}
+
+/* MODAL */
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.mov.on{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--b2);border-radius:12px;padding:26px;width:450px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-t{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;margin-bottom:4px}
+.modal-s{font-size:12px;color:var(--t2);margin-bottom:20px}
+.ml{display:block;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px;margin-top:14px}
+.mi{width:100%;background:var(--bg3);border:1px solid var(--b2);border-radius:5px;padding:9px 11px;color:var(--text);outline:none;font-size:12px}
+.mi:focus{border-color:rgba(0,229,160,.4)}
+select.mi{cursor:pointer;appearance:none}
+.mac{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* AGENT CARDS */
+.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.acard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.aav{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;margin-bottom:10px}
+.an{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.ar{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.ast{display:flex;gap:7px}
+.am{flex:1;background:var(--bg3);border-radius:5px;padding:7px 9px;text-align:center}
+.amn{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--primary);line-height:1}
+.aml{font-size:9px;color:var(--t3);margin-top:1px}
+
+/* PHONE BAR */
+.pbar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.pbar-l{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em}
+.pnums{display:flex;gap:6px}
+.pnum{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:11px;color:var(--t2);cursor:pointer;transition:all .12s}
+.pnum.act{background:var(--pd);border-color:rgba(0,229,160,.4);color:var(--primary)}
+.pbar-tip{margin-left:auto;font-size:10px;color:var(--t3)}
+
+/* IMPORT AREA */
+.imp-area{background:var(--bg3);border:2px dashed var(--b2);border-radius:var(--r);padding:32px;text-align:center;cursor:pointer;transition:border-color .15s;margin-bottom:16px}
+.imp-area:hover{border-color:rgba(0,229,160,.4)}
+.imp-area p{font-size:13px;color:var(--t2);margin-top:8px}
+.imp-area small{font-size:11px;color:var(--t3)}
+
+/* PIPELINE BAR */
+.pipe-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.pipe-label{width:88px;font-size:11px;color:var(--t2)}
+.pipe-bar{flex:1;background:var(--bg3);border-radius:3px;height:5px}
+.pipe-fill{background:var(--primary);height:5px;border-radius:3px;transition:width .5s}
+.pipe-num{width:24px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--t3)}
+
+/* SETTINGS */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:13px;color:var(--text);font-weight:500}
+.setting-desc{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ACTIVITY */
+.act-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.act-txt{font-size:12px;color:var(--t2)}
+.act-txt strong{color:var(--text)}
+.act-time{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:1px}
+
+/* ALERT BOX */
+.alert{padding:12px 16px;border-radius:var(--r);margin-bottom:16px;font-size:13px;line-height:1.7}
+.alert-g{background:var(--pd);border:1px solid rgba(0,229,160,.3);color:var(--primary)}
+.alert-r{background:var(--rd);border:1px solid rgba(255,77,106,.3);color:var(--red)}
+.alert-y{background:var(--gld);border:1px solid rgba(245,200,66,.3);color:var(--gold)}
+
+/* WARM CALL BANNER */
+.warm-banner{background:linear-gradient(135deg,rgba(78,168,222,.12),rgba(0,229,160,.08));border:1px solid rgba(78,168,222,.3);border-radius:6px;padding:10px 13px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.warm-icon{font-size:18px}
+.warm-txt{font-size:12px;color:var(--blue);line-height:1.5}
+.warm-txt strong{color:var(--text)}
+
+@media(max-width:800px){.sg{grid-template-columns:1fr 1fr}.ag{grid-template-columns:1fr}.sb{display:none}.dr{width:100%}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lcard">
+    <div class="llogo">PureCode Agency</div>
+    <div class="ltitle">Team Portal</div>
+    <label class="ll">Sign in as</label>
+    <select class="li" id="lrole" onchange="updatePasswordHint()"></select>
+    <label class="ll">Password</label>
+    <input class="li" type="password" id="lpass" placeholder="Enter password">
+    <div class="lerr" id="lerr">Wrong password. Try again.</div>
+    <button class="lbtn" onclick="doLogin()">Sign In →</button>
+    <p style="font-size:11px;color:var(--t3);margin-top:14px;text-align:center">Default password: <span style="font-family:'DM Mono',monospace;color:var(--t2)">admin123</span></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="top">
+    <div class="top-brand">PURECODE</div>
+    <div class="top-sep"></div>
+    <div class="top-pg" id="top-pg">Dashboard</div>
+    <div class="top-r">
+      <div class="top-usr"><div class="av" id="top-av">D</div><span id="top-name">David</span></div>
+      <button class="logoutb" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+  <div class="body">
+    <nav class="sb" id="sidebar">
+      <div class="sb-sec">Main</div>
+      <button class="nb on" onclick="showPg('dashboard')" id="nav-dashboard"><span class="ni">📊</span>Dashboard</button>
+      <button class="nb" onclick="showPg('leads')" id="nav-leads"><span class="ni">📋</span><span id="nav-leads-lbl">All Leads</span></button>
+      <button class="nb" onclick="showPg('emails')" id="nav-emails"><span class="ni">✉️</span>Cold Emails</button>
+      <div class="sb-sec" id="admin-section">Admin</div>
+      <button class="nb" onclick="showPg('agents')" id="nav-agents" style="display:none"><span class="ni">👥</span>Agents</button>
+      <button class="nb" onclick="showPg('import')" id="nav-import" style="display:none"><span class="ni">⬆️</span>Import Leads</button>
+      <div class="sb-sec">Tools</div>
+      <button class="nb" onclick="showPg('myphones')" id="nav-myphones"><span class="ni">📞</span>My Numbers</button>
+      <button class="nb" onclick="showPg('activity')" id="nav-activity"><span class="ni">⚡</span>Activity</button>
+      <div class="sb-sec" id="admin-section2">Settings</div>
+      <button class="nb" onclick="showPg('settings')" id="nav-settings" style="display:none"><span class="ni">⚙️</span>Settings</button>
+    </nav>
+
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div class="pg on" id="pg-dashboard">
+        <div class="ph"><div><div class="pt" id="dash-title">Team Overview</div><div class="ps">OC Roofing Campaign — Live</div></div></div>
+        <div class="sg" id="dash-stats"></div>
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:10px">Recent Activity</div>
+            <div class="tw"><div style="padding:0 14px" id="dash-activity"></div></div>
+          </div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:10px">Pipeline</div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px" id="dash-pipe"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEADS -->
+      <div class="pg" id="pg-leads">
+        <div class="ph">
+          <div><div class="pt" id="leads-title">All Leads</div><div class="ps" id="leads-sub"></div></div>
+          <div id="leads-hdr-btns" style="display:flex;gap:8px"></div>
+        </div>
+        <div class="pbar" id="agent-pbar" style="display:none">
+          <div><div class="pbar-l">Your Numbers</div><div class="pnums" id="pbar-nums"></div></div>
+          <div class="pbar-tip">Switch number every 30 calls to avoid spam</div>
+        </div>
+        <div class="fb">
+          <input class="fi" id="fsearch" placeholder="🔍 Search name, phone, owner..." style="min-width:200px" oninput="renderLeads()">
+          <select class="fsel" id="ftype" onchange="renderLeads()">
+            <option value="">All Types</option>
+            <option value="Roofing">Roofing</option>
+            <option value="Car Care">Car Care</option>
+            <option value="HVAC">HVAC</option>
+            <option value="Plumbing">Plumbing</option>
+            <option value="Other">Other</option>
+          </select>
+          <select class="fsel" id="fstatus" onchange="renderLeads()">
+            <option value="">All Statuses</option>
+            <option value="New">New</option>
+            <option value="No Answer">No Answer</option>
+            <option value="Called">Called</option>
+            <option value="Interested">Interested</option>
+            <option value="Demo Booked">Demo Booked</option>
+            <option value="Closed">Closed</option>
+            <option value="Not Qualified">Not Qualified</option>
+          </select>
+          <select class="fsel" id="ftier" onchange="renderLeads()">
+            <option value="">All Tiers</option>
+            <option value="1">Tier 1 — Hot</option>
+            <option value="2">Tier 2 — Warm</option>
+            <option value="3">Tier 3 — Skip</option>
+          </select>
+          <select class="fsel" id="fagent" onchange="renderLeads()" style="display:none">
+            <option value="">All Agents</option>
+            <option value="__unassigned">Unassigned</option>
+          </select>
+          <select class="fsel" id="femail" onchange="renderLeads()">
+            <option value="">Email: All</option>
+            <option value="sent">Email Sent</option>
+            <option value="notsent">Not Sent</option>
+          </select>
+          <span class="fcount" id="fcount">—</span>
+        </div>
+        <div class="tw"><table><thead>
+          <tr><th>#</th><th>Business</th><th>Phone</th><th>City</th><th>Owner</th><th>Tier</th><th>Status</th><th>Email</th><th>Assigned</th><th>Notes</th><th>Actions</th></tr>
+        </thead><tbody id="leads-body"></tbody></table></div>
+      </div>
+
+      <!-- COLD EMAILS PAGE -->
+      <div class="pg" id="pg-emails">
+        <div class="ph">
+          <div><div class="pt">Cold Email System</div><div class="ps">AI-powered emails sent before calls — turns cold calls into warm follow-ups</div></div>
+        </div>
+        <div class="alert alert-g">
+          <strong>The Strategy:</strong> Send a personalized email to each lead 24–48 hours before calling. When you call, say: "Hey [Name], I sent you an email a couple days ago about your call coverage — did you get a chance to see it?" — Instantly warmer, less friction, more trust.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px">📧 Email Stats</div>
+            <div id="email-stats"></div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px">🎯 Call Opener After Email</div>
+            <div style="background:var(--bg3);border-radius:5px;padding:12px;font-size:12px;color:var(--text);line-height:1.8;font-style:italic">"Hey [Name] — this is [Your Name] from PureCode. I sent you a quick email a couple days ago about how other roofing companies in OC are recovering missed jobs with AI — did you get a chance to see it?"</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:8px">Even if they didn't read it — they'll say "oh yeah" or "send it again." Either way, you're no longer a cold caller. You have history.</div>
+          </div>
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px">Generate Emails for Leads</div>
+        <div class="fb" style="margin-bottom:14px">
+          <select class="fsel" id="email-filter-agent" style="display:none"><option value="">All Agents</option></select>
+          <select class="fsel" id="email-filter-tier" onchange="renderEmailList()">
+            <option value="">All Tiers</option>
+            <option value="1">Tier 1 Only</option>
+            <option value="2">Tier 2 Only</option>
+          </select>
+          <select class="fsel" id="email-filter-sent" onchange="renderEmailList()">
+            <option value="">All Email Status</option>
+            <option value="notsent">Not Sent Yet</option>
+            <option value="sent">Already Sent</option>
+          </select>
+          <input class="fi" id="email-api-key" placeholder="Anthropic API key (sk-ant-...)" style="min-width:260px;font-family:'DM Mono',monospace;font-size:11px">
+          <span class="fcount" id="email-count">—</span>
+        </div>
+        <div class="tw"><table><thead>
+          <tr><th>#</th><th>Business</th><th>Owner</th><th>Tier</th><th>Hook</th><th>Email Status</th><th>Action</th></tr>
+        </thead><tbody id="email-body"></tbody></table></div>
+      </div>
+
+      <!-- AGENTS (admin) -->
+      <div class="pg" id="pg-agents">
+        <div class="ph">
+          <div><div class="pt">Agents</div><div class="ps">Manage your team</div></div>
+          <button class="btn bp" onclick="openAddAgent()">+ Add Agent</button>
+        </div>
+        <div class="ag" id="agents-grid"></div>
+      </div>
+
+      <!-- IMPORT (admin) -->
+      <div class="pg" id="pg-import">
+        <div class="ph"><div><div class="pt">Import Leads</div><div class="ps">Upload CSV or paste data to add leads</div></div></div>
+        <div class="alert alert-y"><strong>CSV Format:</strong> Business Name, Phone, City, Owner Name, Business Type, Tier (1/2/3), Warning (optional), Hook/Notes (optional)</div>
+        <div class="imp-area" onclick="document.getElementById('csvfile').click()">
+          <div style="font-size:32px">📁</div>
+          <p>Click to upload CSV file</p>
+          <small>or paste CSV data below</small>
+        </div>
+        <input type="file" id="csvfile" accept=".csv" style="display:none" onchange="handleCSV(this)">
+        <div style="font-size:12px;color:var(--t3);margin-bottom:8px;font-family:'DM Mono',monospace">Or paste CSV data:</div>
+        <textarea class="ntarea" id="csv-paste" rows="8" placeholder="Business Name,Phone,City,Owner Name,Business Type,Tier&#10;Horizon Roofing,(714) 328-1967,Anaheim,Frank Garcia,Roofing,1&#10;..."></textarea>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn bp" onclick="importFromPaste()">Import CSV Data →</button>
+          <button class="btn bs" onclick="document.getElementById('csv-paste').value=''">Clear</button>
+        </div>
+        <div id="import-result" style="margin-top:12px;font-size:13px;display:none"></div>
+        <div style="margin-top:24px">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px">💾 Backup & Restore</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn bs" onclick="exportData()">⬇️ Export all data (JSON)</button>
+            <button class="btn bs" onclick="document.getElementById('import-file').click()">⬆️ Restore from backup</button>
+            <button class="btn bd" onclick="if(confirm('Reset ALL data? Cannot undo.'))resetData()">🗑️ Reset all data</button>
+          </div>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+        </div>
+      </div>
+
+      <!-- MY PHONES -->
+      <div class="pg" id="pg-myphones">
+        <div class="ph"><div><div class="pt">My Phone Numbers</div><div class="ps">Rotate to avoid spam detection</div></div></div>
+        <div id="phones-content"></div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:14px;max-width:500px">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:10px">Rotation Rule</div>
+          <div style="font-size:13px;color:var(--t2);line-height:2">
+            → <strong style="color:var(--text)">Number 1:</strong> Calls 1–30 of the day<br>
+            → <strong style="color:var(--text)">Number 2:</strong> Calls 31–60<br>
+            → <strong style="color:var(--text)">Number 3:</strong> Calls 61–90+<br>
+            → Callbacks: always use the number they saw before
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY -->
+      <div class="pg" id="pg-activity">
+        <div class="ph"><div><div class="pt">Activity Log</div><div class="ps">All calls and notes</div></div></div>
+        <div class="tw"><table><thead>
+          <tr><th>Time</th><th>Agent</th><th>Business</th><th>Outcome</th><th>Note</th></tr>
+        </thead><tbody id="act-body"></tbody></table></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="pg" id="pg-settings">
+        <div class="ph"><div><div class="pt">Settings</div><div class="ps">Manage passwords and configuration</div></div></div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;max-width:500px">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:16px">Change Password</div>
+          <label class="ml">Select User</label>
+          <select class="mi" id="pw-user"></select>
+          <label class="ml">New Password</label>
+          <input class="mi" type="password" id="pw-new" placeholder="New password">
+          <div style="margin-top:16px"><button class="btn bp" onclick="changePw()">Save Password</button></div>
+          <div id="pw-msg" style="font-size:12px;color:var(--primary);margin-top:8px;display:none">✓ Password updated</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="dov" id="dov" onclick="closeDrawer()"></div>
+<div class="dr" id="drawer">
+  <div class="drh">
+    <div><div class="drt" id="dr-name">—</div><div class="drs" id="dr-phone">—</div></div>
+    <div class="drcl" onclick="closeDrawer()">✕</div>
+  </div>
+  <div class="drb">
+    <div id="dr-warm-banner"></div>
+    <div class="lig" id="dr-info"></div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Call Outcome</div>
+      <div class="oc-row" id="oc-row"></div>
+    </div>
+    <div id="dr-email-panel"></div>
+    <div>
+      <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">E-Desk Notes <span style="color:var(--t3);font-weight:400">(visible to all agents)</span></div>
+      <div id="notes-list"></div>
+    </div>
+  </div>
+  <div class="drf">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <textarea class="ntarea" id="note-input" rows="3" placeholder="Log your call... e.g. 'Frank answered, interested in $350 plan, call back Thursday 9am CA time'"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn bs" onclick="closeDrawer()">Cancel</button>
+        <button class="btn bp" id="save-btn" onclick="saveNote()">Save + Log Call</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN MODAL -->
+<div class="mov" id="assign-modal">
+  <div class="modal">
+    <div class="modal-t">Assign Lead</div>
+    <div class="modal-s" id="assign-modal-sub">Assign to agent</div>
+    <label class="ml">Agent</label>
+    <select class="mi" id="assign-sel"></select>
+    <div class="mac">
+      <button class="btn bs" onclick="closeModal('assign-modal')">Cancel</button>
+      <button class="btn bp" onclick="confirmAssign()">Assign →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT AGENT MODAL -->
+<div class="mov" id="agent-modal">
+  <div class="modal">
+    <div class="modal-t" id="agent-modal-title">Add Agent</div>
+    <div class="modal-s">Agents can log in and manage their assigned leads</div>
+    <label class="ml">Full Name</label>
+    <input class="mi" id="ag-name" placeholder="e.g. Khalid">
+    <label class="ml">Login ID (no spaces)</label>
+    <input class="mi" id="ag-id" placeholder="e.g. khalid">
+    <label class="ml">Password</label>
+    <input class="mi" type="password" id="ag-pw" placeholder="Set a password">
+    <label class="ml">Phone Number 1 (CA area code)</label>
+    <input class="mi" id="ag-p1" placeholder="(714) 555-0101">
+    <label class="ml">Phone Number 2</label>
+    <input class="mi" id="ag-p2" placeholder="(949) 555-0102">
+    <label class="ml">Phone Number 3</label>
+    <input class="mi" id="ag-p3" placeholder="(657) 555-0103">
+    <input type="hidden" id="ag-edit-id">
+    <div class="mac">
+      <button class="btn bs" onclick="closeModal('agent-modal')">Cancel</button>
+      <button class="btn bp" onclick="saveAgent()">Save Agent →</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL PREVIEW MODAL -->
+<div class="mov" id="email-modal">
+  <div class="modal">
+    <div class="modal-t" id="email-modal-title">Cold Email</div>
+    <div class="modal-s" id="email-modal-sub">Generated for this lead</div>
+    <div style="background:var(--bg3);border-radius:6px;padding:14px;margin-bottom:16px">
+      <div style="font-size:10px;color:var(--t3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em">Subject</div>
+      <div style="font-size:13px;color:var(--text);font-weight:500" id="email-modal-subject">—</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:6px;padding:14px;margin-bottom:16px;max-height:260px;overflow-y:auto">
+      <div style="font-size:10px;color:var(--t3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Email Body</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.8;white-space:pre-wrap" id="email-modal-body">—</div>
+    </div>
+    <div id="email-modal-generating" style="text-align:center;padding:20px;display:none">
+      <div style="font-size:13px;color:var(--primary);margin-bottom:8px">✨ AI is writing your email...</div>
+      <div style="font-size:11px;color:var(--t3)">Personalizing based on business info and pain points</div>
+    </div>
+    <div class="mac">
+      <button class="btn bs" onclick="closeModal('email-modal')">Close</button>
+      <button class="btn bp" id="email-copy-btn" onclick="copyEmail()">Copy Email</button>
+      <button class="btn bp" id="email-mark-sent-btn" onclick="markEmailSent()">✓ Mark as Sent</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// DATA STORE (localStorage-backed)
+// ═══════════════════════════════════════
+const DB = {
+  get(key){try{return JSON.parse(localStorage.getItem('pc_'+key))||null}catch{return null}},
+  set(key,val){localStorage.setItem('pc_'+key,JSON.stringify(val))},
+  del(key){localStorage.removeItem('pc_'+key)}
+};
+
+function initDB(){
+  if(!DB.get('initialized')){
+    DB.set('agents',{
+      admin:{name:'David',role:'admin',pw:'admin123',initials:'D',color:'#00e5a0'},
+      agent1:{name:'Agent 1',role:'agent',pw:'agent123',initials:'A',color:'#4ea8de',phones:['(714) 555-0101','(949) 555-0102','(657) 555-0103']},
+      agent2:{name:'Agent 2',role:'agent',pw:'agent123',initials:'B',color:'#a78bfa',phones:['(714) 555-0201','(949) 555-0202','(657) 555-0203']},
+      agent3:{name:'Agent 3',role:'agent',pw:'agent123',initials:'C',color:'#f5c842',phones:['(714) 555-0301','(949) 555-0302','(657) 555-0303']},
+    });
+    DB.set('leads', SEED_LEADS.map((l,i)=>({...l,id:i+1})));
+    DB.set('activity',[]);
+    DB.set('nextLeadId', SEED_LEADS.length+1);
+    DB.set('initialized',true);
+  }
+}
+
+// ═══════════════════════════════════════
+// SEED DATA (from your Excel)
+// ═══════════════════════════════════════
+const SEED_LEADS = [
+  {name:'Prestige Roofing',phone:'(714) 603-7103',city:'Anaheim',owner:'John Arellano',type:'Roofing',score:'4.8',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:"Yelp: 'Communication could have been better.' Supports AI pitch.",warning:''},
+  {name:'Horizon Roofing',phone:'(714) 328-1967',city:'Anaheim',owner:'Frank Garcia',type:'Roofing',score:'4.5',tier:1,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:"★ PERFECT HOOK ★ — 'After 15 phone calls they forgot to schedule me.' Also: 'Too busy to get back to you for a bid.'",warning:''},
+  {name:'Sierra Roof Inc.',phone:'(714) 635-5071',city:'Anaheim',owner:'John Serrano',type:'Roofing',score:'5.0',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Very responsive per reviews. Lower urgency.',warning:''},
+  {name:'Roof Rx',phone:'(310) 676-8888',city:'Anaheim',owner:'Clay Ramirez',type:'Roofing',score:'4.5',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'No confirmed phone-miss review. Verify Google.',warning:''},
+  {name:'Royal Roof Co.',phone:'(714) 764-1100',city:'Anaheim',owner:'Tom Beattie',type:'Roofing',score:'5.0',tier:3,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:"Very few reviews. 'Invisible to homeowners who Google you.'",warning:'⚠️ License #927600 REVOKED Jan 2025 — verify before calling'},
+  {name:'ROOFCORP of CA',phone:'(714) 210-5993',city:'Anaheim',owner:'Corporate',type:'Roofing',score:'—',tier:3,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Commercial/industrial only.',warning:'Commercial only — verify fit'},
+  {name:'American Roofing Co.',phone:'(714) 530-4311',city:'Anaheim',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'No reviews. Verify Google for phone complaints.',warning:''},
+  {name:'All Pro Roofing',phone:'(714) 220-2822',city:'Anaheim',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'No reviews on major platforms. High potential.',warning:''},
+  {name:'Haggerty Roofing',phone:'(714) 583-0569',city:'Anaheim',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'No reviews. Owner-operator = likely on the roof = zero phone coverage.',warning:''},
+  {name:'Major League Roofers',phone:'(888) 952-5444',city:'Anaheim',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Toll-free = basic phone system only.',warning:''},
+  {name:'Barnett Roofing',phone:'(714) 724-1938',city:'Anaheim',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Reroofs, repairs. No bad phone reviews.',warning:''},
+  {name:'Top Roofing Services',phone:'(866) 828-1886',city:'Anaheim',owner:'Ever / Jose',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:"Small team — 'Ever or Jose.' Limited after-hours coverage.",warning:''},
+  {name:'Guardian Roofs',phone:'(714) 633-3619',city:'Orange',owner:'Steve Sudduth',type:'Roofing',score:'4.8',tier:1,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:"HomeAdvisor: 'Communication between individuals is poor. One person told me 8:00 AM...' — scheduling breakdown.",warning:''},
+  {name:'Royal Roofing Construction',phone:'(714) 680-0015',city:'Placentia',owner:'Jason Cimarusti',type:'Roofing',score:'—',tier:1,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:"Angi: 'Extended period of no contact mid-project. We wondered if something happened to Frank.'",warning:''},
+  {name:'Done Rite Roofing',phone:'(562) 371-0535',city:'Anaheim',owner:'Isaac',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:"Isaac answers calls himself. May not need AI strongly.",warning:''},
+  {name:'All Surface Roofing OC',phone:'(714) 834-1462',city:'Anaheim',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'No bad phone reviews found.',warning:''},
+  {name:'Hoyt Roofs Inc.',phone:'(714) 773-1820',city:'Anaheim',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Est. 1990. Good BBB standing.',warning:''},
+  {name:'Heidt Roofing',phone:'(714) 997-9729',city:'Orange',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Small local. Likely high missed-call risk.',warning:''},
+  {name:'Jim Murray Roofing',phone:'(714) 744-4476',city:'Orange',owner:'Jim Murray',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Owner-named = likely answers personally (on roof = missed calls).',warning:''},
+  {name:'Saddleback Roofing Inc',phone:'(714) 998-1651',city:'Orange',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Alt phone: (562) 674-0905.',warning:''},
+  {name:'Above It All Roofing',phone:'(949) 673-9222',city:'Orange',owner:'Dave Brunn',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:"'Dave Brunn was very professional and responsive.' Lower urgency.",warning:''},
+  {name:'RoofTek & Waterproofing',phone:'(949) 566-1205',city:'Anaheim',owner:'Arturo',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:"'Arturo is genuine and responds promptly.' Lower urgency.",warning:''},
+  {name:'Cert-A-Roof',phone:'(714) 942-1877',city:'Orange',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Inspection-focused. Verify call coverage.',warning:''},
+  {name:'Esdee Roof Corp',phone:'(714) 628-9392',city:'Orange',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Est. 20+ years. Likely limited phone coverage.',warning:''},
+  {name:'Academy Roofing Co',phone:'(714) 997-0038',city:'Orange',owner:'—',type:'Roofing',score:'—',tier:2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook:'Small local near Guardian Roofs.',warning:''},
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let CU = null; // current user id
+let openLeadId = null;
+let assignLeadId = null;
+let selectedOutcome = null;
+let emailGenLeadId = null;
+
+// ═══════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════
+function buildLoginSelect(){
+  const agents = DB.get('agents');
+  const sel = document.getElementById('lrole');
+  sel.innerHTML = '';
+  Object.entries(agents).forEach(([id,ag])=>{
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = ag.name + (ag.role==='admin' ? ' — Team Lead' : ' — Agent');
+    sel.appendChild(opt);
+  });
+}
+function doLogin(){
+  const agents = DB.get('agents');
+  const role = document.getElementById('lrole').value;
+  const pw = document.getElementById('lpass').value;
+  if(!agents[role] || agents[role].pw !== pw){
+    document.getElementById('lerr').style.display='block';return;
+  }
+  CU = role;
+  document.getElementById('lerr').style.display='none';
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  initApp();
+}
+function doLogout(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  CU = null;
+  buildLoginSelect();
+}
+document.getElementById('lpass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+function initApp(){
+  const agents = DB.get('agents');
+  const ag = agents[CU];
+  document.getElementById('top-name').textContent = ag.name;
+  document.getElementById('top-av').textContent = ag.initials||ag.name[0];
+  document.getElementById('top-av').style.background = ag.role==='admin'?'var(--primary)':(ag.color||'var(--primary)');
+  if(ag.role==='admin'){
+    document.getElementById('top-av').style.color = '#000';
+  }
+  if(ag.role==='admin'){
+    document.getElementById('nav-agents').style.display='flex';
+    document.getElementById('nav-import').style.display='flex';
+    document.getElementById('nav-settings').style.display='flex';
+    document.getElementById('fagent').style.display='block';
+    document.getElementById('email-filter-agent').style.display='block';
+    buildAgentFilter('fagent');
+    buildAgentFilter('email-filter-agent');
+    buildAgentFilter('assign-sel');
+    buildPwSelect();
+  } else {
+    document.getElementById('admin-section').style.display='none';
+    document.getElementById('admin-section2').style.display='none';
+    document.getElementById('agent-pbar').style.display='flex';
+    renderAgentPhoneBar();
+  }
+  showPg('dashboard');
+}
+
+function buildAgentFilter(selId){
+  const agents = DB.get('agents');
+  const sel = document.getElementById(selId);
+  if(!sel) return;
+  // clear existing non-placeholder options
+  while(sel.options.length > (selId==='assign-sel'?1:2)) sel.remove(sel.options.length-1);
+  Object.entries(agents).filter(([id,a])=>a.role==='agent').forEach(([id,ag])=>{
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = ag.name;
+    sel.appendChild(opt);
+  });
+}
+
+function buildPwSelect(){
+  const agents = DB.get('agents');
+  const sel = document.getElementById('pw-user');
+  sel.innerHTML = '';
+  Object.entries(agents).forEach(([id,ag])=>{
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = ag.name;
+    sel.appendChild(opt);
+  });
+}
+
+// ═══════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════
+function showPg(id){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  const nb = document.getElementById('nav-'+id);
+  if(nb) nb.classList.add('on');
+  document.getElementById('top-pg').textContent = {
+    dashboard:'Dashboard',leads:'Leads',emails:'Cold Emails',agents:'Agents',
+    import:'Import',myphones:'My Numbers',activity:'Activity',settings:'Settings'
+  }[id]||id;
+  if(id==='dashboard') renderDash();
+  if(id==='leads') renderLeads();
+  if(id==='emails') renderEmailList();
+  if(id==='agents') renderAgents();
+  if(id==='myphones') renderPhones();
+  if(id==='activity') renderActivity();
+}
+
+// ═══════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════
+function renderDash(){
+  const agents = DB.get('agents');
+  const ag = agents[CU];
+  let leads = DB.get('leads')||[];
+  if(ag.role!=='admin') leads = leads.filter(l=>l.assigned===CU);
+  const total=leads.length, demos=leads.filter(l=>l.status==='Demo Booked').length,
+    inter=leads.filter(l=>l.status==='Interested').length,
+    emailed=leads.filter(l=>l.emailSent).length;
+  document.getElementById('dash-title').textContent = ag.role==='admin'?'Team Overview':'My Dashboard';
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="sc g"><div class="sn">${demos}</div><div class="sl">Demos Booked</div></div>
+    <div class="sc o"><div class="sn">${inter}</div><div class="sl">Interested</div></div>
+    <div class="sc b"><div class="sn">${emailed}</div><div class="sl">Emails Sent</div></div>
+    <div class="sc gd"><div class="sn">${total}</div><div class="sl">${ag.role==='admin'?'Total Leads':'My Leads'}</div></div>`;
+  const act = (DB.get('activity')||[]).slice(0,8);
+  document.getElementById('dash-activity').innerHTML = act.length
+    ? act.map(a=>`<div class="act-item"><div class="act-dot" style="background:${a.outcome==='Demo Booked'?'var(--primary)':a.outcome==='Interested'?'var(--orange)':'var(--bg5)'}"></div>
+        <div><div class="act-txt"><strong>${a.agentName}</strong> → ${a.biz} — <span class="badge b${a.outcome.replace(/ /g,'')}">${a.outcome}</span></div>
+        <div class="act-time">${a.time}${a.note?' · '+a.note.substring(0,45):'...'}</div></div></div>`).join('')
+    : '<div style="padding:16px;font-size:12px;color:var(--t3)">No activity yet</div>';
+  const statuses=['New','No Answer','Called','Interested','Demo Booked','Closed'];
+  document.getElementById('dash-pipe').innerHTML = statuses.map(s=>{
+    const c=leads.filter(l=>l.status===s).length, pct=total?Math.round(c/total*100):0;
+    return `<div class="pipe-row"><div class="pipe-label">${s}</div>
+      <div class="pipe-bar"><div class="pipe-fill" style="width:${pct}%"></div></div>
+      <div class="pipe-num">${c}</div></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// LEADS TABLE
+// ═══════════════════════════════════════
+function getFilteredLeads(){
+  const agents = DB.get('agents');
+  const ag = agents[CU];
+  let leads = DB.get('leads')||[];
+  if(ag.role!=='admin') leads = leads.filter(l=>l.assigned===CU);
+  const s = document.getElementById('fsearch').value.toLowerCase();
+  const ft = document.getElementById('ftype').value;
+  const fs = document.getElementById('fstatus').value;
+  const fti = document.getElementById('ftier').value;
+  const fa = document.getElementById('fagent').value;
+  const fe = document.getElementById('femail').value;
+  if(s) leads=leads.filter(l=>(l.name+l.phone+l.owner+l.city).toLowerCase().includes(s));
+  if(ft) leads=leads.filter(l=>l.type===ft);
+  if(fs) leads=leads.filter(l=>l.status===fs);
+  if(fti) leads=leads.filter(l=>String(l.tier)===fti);
+  if(fa==='__unassigned') leads=leads.filter(l=>!l.assigned);
+  else if(fa) leads=leads.filter(l=>l.assigned===fa);
+  if(fe==='sent') leads=leads.filter(l=>l.emailSent);
+  if(fe==='notsent') leads=leads.filter(l=>!l.emailSent);
+  return leads;
+}
+
+function renderLeads(){
+  const agents = DB.get('agents');
+  const ag = agents[CU];
+  const filtered = getFilteredLeads();
+  document.getElementById('fcount').textContent = filtered.length+' leads';
+  document.getElementById('leads-title').textContent = ag.role==='admin'?'All Leads':'My Leads';
+  document.getElementById('leads-sub').textContent = filtered.length+' showing';
+  const isAdmin = ag.role==='admin';
+  if(isAdmin && !document.getElementById('bulk-assign-btn')){
+    document.getElementById('leads-hdr-btns').innerHTML=`<button class="btn bp" id="bulk-assign-btn" onclick="showPg('import')">⬆️ Import</button>`;
+  }
+  document.getElementById('leads-body').innerHTML = filtered.map(l=>{
+    const aInfo = l.assigned&&agents[l.assigned];
+    const emailBadge = l.emailSent ? `<span class="badge bEmail">✉ Sent</span>` : `<span style="font-size:10px;color:var(--t3)">—</span>`;
+    const warnPrefix = l.warning ? `<span class="badge bWarn" title="${l.warning}">⚠️</span> ` : '';
+    const nc = l.notes.length;
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--t3)">${l.id}</td>
+      <td class="nm">${warnPrefix}${l.name}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--primary)">${l.phone||'—'}</td>
+      <td>${l.city||'—'}</td>
+      <td style="font-size:11px">${(l.owner||'—').substring(0,25)}</td>
+      <td><span class="badge bT${l.tier}">T${l.tier}</span></td>
+      <td><span class="badge b${l.status.replace(/ /g,'')}">${l.status}</span></td>
+      <td>${emailBadge}</td>
+      <td>${aInfo?`<span style="font-size:11px;color:${aInfo.color||'var(--t2)'}">${aInfo.name}</span>`:'<span style="color:var(--t3);font-size:11px">—</span>'}</td>
+      <td><button class="btn bs bxs" onclick="openDrawer(${l.id})" style="${nc>0?'color:var(--primary);border-color:rgba(0,229,160,.3)':''}">${nc>0?'📝 '+nc:'+'}</button></td>
+      <td style="display:flex;gap:5px">
+        ${isAdmin?`<button class="btn bs bxs" onclick="openAssignModal(${l.id})">Assign</button>`:''}
+        <button class="btn bs bxs" onclick="openDrawer(${l.id})">Open</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// DRAWER
+// ═══════════════════════════════════════
+function openDrawer(id){
+  const leads = DB.get('leads')||[];
+  const l = leads.find(x=>x.id===id);
+  if(!l) return;
+  openLeadId = id;
+  selectedOutcome = null;
+  document.getElementById('dr-name').textContent = l.name;
+  document.getElementById('dr-phone').textContent = (l.phone||'—')+' · '+(l.city||'');
+  document.getElementById('dr-info').innerHTML=`
+    <div class="li2"><div class="lil">Owner</div><div class="liv">${l.owner||'—'}</div></div>
+    <div class="li2"><div class="lil">Phone</div><div class="liv ph">${l.phone||'—'}</div></div>
+    <div class="li2"><div class="lil">Type</div><div class="liv">${l.type||'—'}</div></div>
+    <div class="li2"><div class="lil">Score</div><div class="liv">${l.score||'—'}</div></div>
+    <div class="li2"><div class="lil">Tier</div><div class="liv"><span class="badge bT${l.tier}">Tier ${l.tier}</span></div></div>
+    <div class="li2"><div class="lil">Status</div><div class="liv"><span class="badge b${l.status.replace(/ /g,'')}">${l.status}</span></div></div>
+    ${l.hook?`<div class="li2" style="grid-column:1/-1"><div class="lil">Research Hook</div><div class="liv" style="font-size:11px;color:var(--t2);font-weight:400">${l.hook.substring(0,180)}</div></div>`:''}
+    ${l.warning?`<div class="li2" style="grid-column:1/-1;background:var(--rd)"><div class="lil" style="color:var(--red)">⚠️ Warning</div><div class="liv" style="color:var(--red);font-size:11px">${l.warning}</div></div>`:''}
+  `;
+  // Warm call banner
+  const wb = document.getElementById('dr-warm-banner');
+  if(l.emailSent){
+    const days = l.emailDate ? Math.floor((Date.now()-l.emailDate)/(1000*60*60*24)) : 1;
+    wb.innerHTML=`<div class="warm-banner"><div class="warm-icon">✉️</div><div class="warm-txt"><strong>Email was sent ${days===0?'today':days===1?'yesterday':days+' days ago'}.</strong> Use warm opener: "Hey ${l.owner&&l.owner!=='—'?l.owner.split(' ')[0]:'[Name]'}, I sent you an email about your call coverage — did you get a chance to see it?"</div></div>`;
+  } else { wb.innerHTML=''; }
+  // Outcome buttons
+  document.getElementById('oc-row').innerHTML = ['No Answer','Called','Interested','Demo Booked','Not Qualified'].map(o=>
+    `<button class="oc-btn${selectedOutcome===o?' sel':''}" onclick="setOutcome(this,'${o}')">${o}</button>`).join('');
+  // Email panel
+  const ep = document.getElementById('dr-email-panel');
+  ep.innerHTML = l.emailSent
+    ? `<div class="em-panel"><div class="em-label">✉️ Email Status</div><div style="color:var(--primary);font-size:12px">Email sent — ${l.emailDate?new Date(l.emailDate).toLocaleDateString():''}</div></div>`
+    : `<div class="em-panel"><div class="em-label">Cold Email</div><div style="font-size:12px;color:var(--t2);margin-bottom:8px">No email sent yet for this lead.</div><button class="btn bs bsm" onclick="openEmailModal(${l.id},true)">✨ Generate & Send Email</button></div>`;
+  renderNotes(id);
+  document.getElementById('note-input').value='';
+  document.getElementById('dov').style.display='block';
+  setTimeout(()=>document.getElementById('drawer').classList.add('open'),10);
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  setTimeout(()=>{document.getElementById('dov').style.display='none';},230);
+  openLeadId=null;
+}
+function renderNotes(id){
+  const leads = DB.get('leads')||[];
+  const l = leads.find(x=>x.id===id);
+  const box = document.getElementById('notes-list');
+  if(!l.notes||!l.notes.length){box.innerHTML='<div class="nt-empty">No notes yet</div>';return;}
+  box.innerHTML=l.notes.map(n=>`<div class="nt-box ${n.agentId===CU?'mine':''}">
+    <div class="nt-meta"><strong>${n.agentName}</strong> · ${n.time}${n.outcome?' · <span class="badge b'+n.outcome.replace(/ /g,'')+'">'+n.outcome+'</span>':''}</div>
+    <div class="nt-txt">${n.text}</div></div>`).join('');
+}
+function setOutcome(btn,o){
+  selectedOutcome=o;
+  document.querySelectorAll('.oc-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function saveNote(){
+  const text = document.getElementById('note-input').value.trim();
+  if(!text&&!selectedOutcome) return;
+  const leads = DB.get('leads')||[];
+  const agents = DB.get('agents');
+  const ag = agents[CU];
+  const l = leads.find(x=>x.id===openLeadId);
+  if(!l) return;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  if(text) l.notes.unshift({agentId:CU,agentName:ag.name,time:timeStr,text,outcome:selectedOutcome||null});
+  if(selectedOutcome) l.status=selectedOutcome;
+  DB.set('leads',leads);
+  // Log activity
+  const activity = DB.get('activity')||[];
+  activity.unshift({agentId:CU,agentName:ag.name,biz:l.name,outcome:selectedOutcome||'Note',note:text.substring(0,60),time:timeStr});
+  DB.set('activity',activity.slice(0,100));
+  renderNotes(openLeadId);
+  document.getElementById('note-input').value='';
+  selectedOutcome=null;
+  document.querySelectorAll('.oc-btn').forEach(b=>b.classList.remove('sel'));
+  const btn=document.getElementById('save-btn');
+  const orig=btn.textContent;btn.textContent='✓ Saved';btn.style.background='#00b87a';
+  setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1500);
+  renderLeads();
+}
+
+// ═══════════════════════════════════════
+// ASSIGN
+// ═══════════════════════════════════════
+function openAssignModal(id){
+  const leads=DB.get('leads')||[];
+  const l=leads.find(x=>x.id===id);
+  assignLeadId=id;
+  document.getElementById('assign-modal-sub').textContent='Assigning: '+l.name;
+  document.getElementById('assign-sel').value=l.assigned||'';
+  document.getElementById('assign-modal').classList.add('on');
+}
+function confirmAssign(){
+  const leads=DB.get('leads')||[];
+  const l=leads.find(x=>x.id===assignLeadId);
+  if(l) l.assigned=document.getElementById('assign-sel').value;
+  DB.set('leads',leads);
+  closeModal('assign-modal');
+  renderLeads();
+}
+function closeModal(id){document.getElementById(id).classList.remove('on');}
+
+// ═══════════════════════════════════════
+// AGENTS PAGE
+// ═══════════════════════════════════════
+function renderAgents(){
+  const agents=DB.get('agents');
+  const leads=DB.get('leads')||[];
+  document.getElementById('agents-grid').innerHTML=Object.entries(agents).map(([id,ag])=>{
+    const ml=leads.filter(l=>l.assigned===id);
+    const demos=ml.filter(l=>l.status==='Demo Booked').length;
+    const inter=ml.filter(l=>l.status==='Interested').length;
+    return `<div class="acard">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="aav" style="background:${(ag.color||'#00e5a0')}22;color:${ag.color||'#00e5a0'};border:1px solid ${(ag.color||'#00e5a0')}33">${ag.initials||ag.name[0]}</div>
+        ${ag.role!=='admin'?`<div style="display:flex;gap:5px"><button class="btn bs bxs" onclick="openEditAgent('${id}')">Edit</button><button class="btn bd bxs" onclick="deleteAgent('${id}')">Del</button></div>`:''}
+      </div>
+      <div class="an">${ag.name}</div>
+      <div class="ar">${ag.role}</div>
+      <div class="ast">
+        <div class="am"><div class="amn">${ml.length}</div><div class="aml">Leads</div></div>
+        <div class="am"><div class="amn" style="color:var(--orange)">${inter}</div><div class="aml">Hot</div></div>
+        <div class="am"><div class="amn" style="color:var(--purple)">${demos}</div><div class="aml">Demos</div></div>
+      </div>
+      ${ag.phones?`<div style="margin-top:10px;font-size:10px;color:var(--t3)">${ag.phones.join(' · ')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function openAddAgent(){
+  document.getElementById('agent-modal-title').textContent='Add Agent';
+  document.getElementById('ag-name').value='';
+  document.getElementById('ag-id').value='';
+  document.getElementById('ag-pw').value='';
+  document.getElementById('ag-p1').value='';
+  document.getElementById('ag-p2').value='';
+  document.getElementById('ag-p3').value='';
+  document.getElementById('ag-edit-id').value='';
+  document.getElementById('agent-modal').classList.add('on');
+}
+function openEditAgent(id){
+  const agents=DB.get('agents');
+  const ag=agents[id];
+  document.getElementById('agent-modal-title').textContent='Edit Agent';
+  document.getElementById('ag-name').value=ag.name;
+  document.getElementById('ag-id').value=id;
+  document.getElementById('ag-id').disabled=true;
+  document.getElementById('ag-pw').value=ag.pw||'';
+  document.getElementById('ag-p1').value=(ag.phones&&ag.phones[0])||'';
+  document.getElementById('ag-p2').value=(ag.phones&&ag.phones[1])||'';
+  document.getElementById('ag-p3').value=(ag.phones&&ag.phones[2])||'';
+  document.getElementById('ag-edit-id').value=id;
+  document.getElementById('agent-modal').classList.add('on');
+}
+function saveAgent(){
+  const agents=DB.get('agents');
+  const editId=document.getElementById('ag-edit-id').value;
+  const name=document.getElementById('ag-name').value.trim();
+  const newId=editId||document.getElementById('ag-id').value.trim().toLowerCase().replace(/\s+/g,'');
+  const pw=document.getElementById('ag-pw').value;
+  const p1=document.getElementById('ag-p1').value.trim();
+  const p2=document.getElementById('ag-p2').value.trim();
+  const p3=document.getElementById('ag-p3').value.trim();
+  if(!name||!newId) return alert('Name and login ID are required');
+  const colors=['#4ea8de','#a78bfa','#f5c842','#ff6b35','#ff4d6a','#00e5a0'];
+  const usedColors=Object.values(agents).map(a=>a.color);
+  const c=colors.find(x=>!usedColors.includes(x))||colors[0];
+  if(editId){
+    agents[editId].name=name;
+    if(pw) agents[editId].pw=pw;
+    agents[editId].phones=[p1,p2,p3].filter(Boolean);
+    agents[editId].initials=name[0].toUpperCase();
+  } else {
+    if(agents[newId]) return alert('ID already exists');
+    agents[newId]={name,role:'agent',pw:pw||'agent123',initials:name[0].toUpperCase(),color:c,phones:[p1,p2,p3].filter(Boolean)};
+  }
+  DB.set('agents',agents);
+  document.getElementById('ag-id').disabled=false;
+  closeModal('agent-modal');
+  buildAgentFilter('fagent');buildAgentFilter('assign-sel');buildPwSelect();
+  renderAgents();
+  buildLoginSelect();
+}
+function deleteAgent(id){
+  if(!confirm('Delete this agent? Their leads will become unassigned.')) return;
+  const agents=DB.get('agents');
+  delete agents[id];
+  DB.set('agents',agents);
+  const leads=DB.get('leads')||[];
+  leads.forEach(l=>{if(l.assigned===id)l.assigned='';});
+  DB.set('leads',leads);
+  renderAgents();buildLoginSelect();
+}
+
+// ═══════════════════════════════════════
+// PHONES
+// ═══════════════════════════════════════
+function renderAgentPhoneBar(){
+  const agents=DB.get('agents');
+  const ag=agents[CU];
+  if(!ag.phones) return;
+  document.getElementById('pbar-nums').innerHTML=ag.phones.map((p,i)=>
+    `<div class="pnum ${i===0?'act':''}" onclick="this.parentNode.querySelectorAll('.pnum').forEach(x=>x.classList.remove('act'));this.classList.add('act')">${p}</div>`).join('');
+}
+function renderPhones(){
+  const agents=DB.get('agents');
+  const ag=agents[CU];
+  const isAdmin=ag.role==='admin';
+  const toShow=isAdmin?Object.entries(agents).filter(([id,a])=>a.role==='agent'):[[CU,ag]];
+  document.getElementById('phones-content').innerHTML=toShow.map(([id,a])=>`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;max-width:480px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px">${a.name}'s Numbers</div>
+      ${(a.phones||['Not set','Not set','Not set']).map((p,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:5px;padding:9px 12px;margin-bottom:7px;${i===0?'border:1px solid rgba(0,229,160,.3)':''}">
+          <div style="font-size:10px;color:${i===0?'var(--primary)':'var(--t3)'};text-transform:uppercase;letter-spacing:.07em;min-width:40px">Num ${i+1}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text);flex:1">${p||'Not assigned'}</div>
+          <div style="font-size:10px;color:var(--t3)">${['Calls 1-30','Calls 31-60','Calls 61+'][i]}</div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// COLD EMAILS
+// ═══════════════════════════════════════
+function renderEmailList(){
+  const leads=DB.get('leads')||[];
+  const agents=DB.get('agents');
+  const ag=agents[CU];
+  let list=ag.role==='admin'?leads:leads.filter(l=>l.assigned===CU);
+  const fTier=document.getElementById('email-filter-tier').value;
+  const fSent=document.getElementById('email-filter-sent').value;
+  const fAgent=document.getElementById('email-filter-agent').value;
+  if(fTier) list=list.filter(l=>String(l.tier)===fTier);
+  if(fSent==='sent') list=list.filter(l=>l.emailSent);
+  if(fSent==='notsent') list=list.filter(l=>!l.emailSent);
+  if(fAgent) list=list.filter(l=>l.assigned===fAgent);
+  document.getElementById('email-count').textContent=list.length+' leads';
+  const sent=leads.filter(l=>l.emailSent).length;
+  const notsent=leads.length-sent;
+  document.getElementById('email-stats').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--bg3);border-radius:6px;padding:12px;text-align:center"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--primary)">${sent}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Emails Sent</div></div>
+      <div style="background:var(--bg3);border-radius:6px;padding:12px;text-align:center"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--t2)">${notsent}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Not Sent Yet</div></div>
+    </div>`;
+  document.getElementById('email-body').innerHTML=list.map(l=>`<tr>
+    <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--t3)">${l.id}</td>
+    <td class="nm">${l.name}</td>
+    <td style="font-size:11px;color:var(--t2)">${(l.owner||'—').substring(0,30)}</td>
+    <td><span class="badge bT${l.tier}">T${l.tier}</span></td>
+    <td style="font-size:11px;color:var(--t3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.hook?l.hook.substring(0,70)+'...':'—'}</td>
+    <td>${l.emailSent?`<span class="badge bEmail">✉ Sent ${l.emailDate?new Date(l.emailDate).toLocaleDateString():''}</span>`:`<span style="font-size:10px;color:var(--t3)">Not sent</span>`}</td>
+    <td style="display:flex;gap:5px">
+      <button class="btn bs bxs" onclick="openEmailModal(${l.id},false)">✨ Generate</button>
+      ${!l.emailSent?`<button class="btn bp bxs" onclick="quickMarkSent(${l.id})">✓ Mark Sent</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+
+function openEmailModal(id, autoGenerate){
+  emailGenLeadId=id;
+  const leads=DB.get('leads')||[];
+  const l=leads.find(x=>x.id===id);
+  document.getElementById('email-modal-title').textContent='Cold Email — '+l.name;
+  document.getElementById('email-modal-sub').textContent=l.owner&&l.owner!=='—'?'To: '+l.owner:'To: '+l.name;
+  if(l.emailSent&&!autoGenerate){
+    document.getElementById('email-modal-subject').textContent='Email already sent';
+    document.getElementById('email-modal-body').textContent='This lead has already received an email.';
+    document.getElementById('email-modal-generating').style.display='none';
+  } else {
+    document.getElementById('email-modal-subject').textContent='';
+    document.getElementById('email-modal-body').textContent='Click "Generate" to create a personalized email.';
+    document.getElementById('email-modal-generating').style.display='none';
+  }
+  document.getElementById('email-modal').classList.add('on');
+  if(autoGenerate) generateEmail(id);
+}
+
+async function generateEmail(id){
+  const leads=DB.get('leads')||[];
+  const l=leads.find(x=>x.id===id);
+  const apiKey=document.getElementById('email-api-key').value.trim();
+  document.getElementById('email-modal-generating').style.display='block';
+  document.getElementById('email-modal-body').textContent='';
+  document.getElementById('email-modal-subject').textContent='Generating...';
+  if(!apiKey){
+    // Fallback template
+    const ownerFirst=(l.owner&&l.owner!=='—')?l.owner.split(' ')[0]:'there';
+    const subj=`Quick question about ${l.name}'s call coverage`;
+    const body=`Hi ${ownerFirst},\n\nI came across ${l.name} online and noticed something that caught my attention.\n\nMost roofing companies in Orange County are losing 30-40% of their inbound calls — homeowners who call after hours, on weekends, or when the team is on a job. Those missed calls don't leave voicemails. They call the next company on Google.\n\n${l.hook&&l.hook.length>10?'Based on what I found about your business, this could be costing you several jobs a month.\n\n':''}We build AI receptionists specifically for roofing contractors. It answers every call 24/7, sounds like a real person, books estimates into your calendar, and sends confirmation texts — all for less than $500/month.\n\nOne recovered job pays for 6 months of the service.\n\nI'll give you a call in the next day or two to see if it makes sense for ${l.name}. If you'd prefer to chat now, just reply to this email.\n\nBest,\n[Your Name]\nPureCode Agency\n[Your CA Phone Number]`;
+    document.getElementById('email-modal-generating').style.display='none';
+    document.getElementById('email-modal-subject').textContent=subj;
+    document.getElementById('email-modal-body').textContent=body;
+    return;
+  }
+  try{
+    const prompt=`Write a cold email for a sales outreach to a roofing company. Here is the business info:
+Business: ${l.name}
+City: ${l.city}
+Owner: ${l.owner||'unknown'}
+Google Rating: ${l.score||'unknown'}
+Research notes: ${l.hook||'No specific pain points found'}
+
+Write a short (150-180 word) cold email that:
+1. Opens with a specific reference to their situation (use the research notes if there's a pain point)
+2. Briefly explains the problem (missed calls = lost jobs)
+3. Mentions our AI receptionist solution (answers calls 24/7, books appointments)
+4. Mentions the price range ($297-$450/month) and ROI (one recovered job pays for months)
+5. Says we'll follow up by phone in 1-2 days
+6. Is personable, not salesy
+
+Also write a short compelling subject line (under 8 words).
+
+Format your response as:
+SUBJECT: [subject line]
+---
+[email body]`;
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});
+    const data=await resp.json();
+    const txt=data.content&&data.content[0]?data.content[0].text:'';
+    const lines=txt.split('\n');
+    const subjLine=lines.find(l=>l.startsWith('SUBJECT:'));
+    const body=lines.filter(l=>!l.startsWith('SUBJECT:')&&l.trim()!=='---').join('\n').trim();
+    document.getElementById('email-modal-subject').textContent=subjLine?subjLine.replace('SUBJECT:','').trim():'Quick question about your call coverage';
+    document.getElementById('email-modal-body').textContent=body;
+  }catch(e){
+    document.getElementById('email-modal-body').textContent='Error generating email. Check your API key or use the template (leave API key blank).';
+  }
+  document.getElementById('email-modal-generating').style.display='none';
+}
+
+function copyEmail(){
+  const subj=document.getElementById('email-modal-subject').textContent;
+  const body=document.getElementById('email-modal-body').textContent;
+  navigator.clipboard.writeText('Subject: '+subj+'\n\n'+body).then(()=>{
+    const btn=document.getElementById('email-copy-btn');
+    btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='Copy Email',1500);
+  });
+}
+
+function markEmailSent(){
+  const leads=DB.get('leads')||[];
+  const l=leads.find(x=>x.id===emailGenLeadId);
+  if(l){l.emailSent=true;l.emailDate=Date.now();}
+  DB.set('leads',leads);
+  closeModal('email-modal');
+  renderEmailList();renderLeads();
+}
+
+function quickMarkSent(id){
+  const leads=DB.get('leads')||[];
+  const l=leads.find(x=>x.id===id);
+  if(l){l.emailSent=true;l.emailDate=Date.now();}
+  DB.set('leads',leads);
+  renderEmailList();
+}
+
+// ═══════════════════════════════════════
+// ACTIVITY
+// ═══════════════════════════════════════
+function renderActivity(){
+  const agents=DB.get('agents');
+  const ag=agents[CU];
+  let activity=DB.get('activity')||[];
+  if(ag.role!=='admin') activity=activity.filter(a=>a.agentId===CU);
+  document.getElementById('act-body').innerHTML=activity.length
+    ?activity.map(a=>`<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--t3)">${a.time}</td>
+      <td style="color:var(--text);font-weight:500">${a.agentName}</td>
+      <td>${a.biz}</td>
+      <td><span class="badge b${(a.outcome||'').replace(/ /g,'')}">${a.outcome||'—'}</span></td>
+      <td style="font-size:11px;color:var(--t3)">${a.note||''}</td>
+    </tr>`).join('')
+    : '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No activity yet</td></tr>';
+}
+
+// ═══════════════════════════════════════
+// IMPORT / EXPORT
+// ═══════════════════════════════════════
+function handleCSV(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{document.getElementById('csv-paste').value=e.target.result;};
+  reader.readAsText(file);
+}
+function importFromPaste(){
+  const raw=document.getElementById('csv-paste').value.trim();
+  if(!raw) return;
+  const lines=raw.split('\n').filter(l=>l.trim());
+  const header=lines[0].toLowerCase();
+  const dataLines=header.includes('business')?lines.slice(1):lines;
+  const leads=DB.get('leads')||[];
+  let nextId=DB.get('nextLeadId')||leads.length+1;
+  let added=0,skipped=0;
+  dataLines.forEach(line=>{
+    const parts=line.split(',').map(p=>p.trim().replace(/^"|"$/g,''));
+    if(parts.length<2) return;
+    const [name,phone,city='',owner='',type='Roofing',tier='2',warning='',hook='']=parts;
+    if(!name) return;
+    if(leads.find(l=>l.phone&&l.phone===phone&&phone)){skipped++;return;}
+    leads.push({id:nextId++,name,phone,city,owner,type,tier:parseInt(tier)||2,status:'New',assigned:'',emailSent:false,emailDate:null,notes:[],hook,warning,score:'—'});
+    added++;
+  });
+  DB.set('leads',leads);DB.set('nextLeadId',nextId);
+  const res=document.getElementById('import-result');
+  res.style.display='block';
+  res.innerHTML=`<span style="color:var(--primary)">✓ Imported ${added} leads. ${skipped} duplicates skipped.</span>`;
+}
+function exportData(){
+  const data={leads:DB.get('leads'),agents:DB.get('agents'),activity:DB.get('activity')};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='purecode_backup_'+new Date().toISOString().split('T')[0]+'.json';a.click();
+}
+function importData(input){
+  const file=input.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(data.leads) DB.set('leads',data.leads);
+      if(data.agents) DB.set('agents',data.agents);
+      if(data.activity) DB.set('activity',data.activity);
+      alert('✓ Data restored successfully. Refreshing...');
+      location.reload();
+    }catch{alert('Invalid backup file');}
+  };
+  reader.readAsText(file);
+}
+function resetData(){
+  DB.del('leads');DB.del('agents');DB.del('activity');DB.del('nextLeadId');DB.del('initialized');
+  alert('Data reset. Reloading...');location.reload();
+}
+
+// ═══════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════
+function changePw(){
+  const uid=document.getElementById('pw-user').value;
+  const np=document.getElementById('pw-new').value;
+  if(!np) return;
+  const agents=DB.get('agents');
+  agents[uid].pw=np;
+  DB.set('agents',agents);
+  document.getElementById('pw-msg').style.display='block';
+  setTimeout(()=>document.getElementById('pw-msg').style.display='none',2000);
+  buildLoginSelect();
+}
+
+// ═══════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════
+initDB();
+buildLoginSelect();
+</script>
+</body>
+</html>

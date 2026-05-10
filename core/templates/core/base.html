@@ -1,0 +1,121 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ page_title|default:"CRM" }}{% endblock %}</title>
+  <script>
+    (function () {
+      try {
+        var savedTheme = window.localStorage.getItem("crm-theme");
+        document.documentElement.setAttribute("data-theme", savedTheme || "dark");
+      } catch (error) {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{% if user.is_superuser or user.role == "ADMIN" %}{% url 'core:dashboard' %}{% else %}{% url 'core:lead-list' %}{% endif %}">
+      <span class="brand-mark"></span>
+      <span>CRM</span>
+    </a>
+    <div class="topbar-title">{{ page_title|default:"Dashboard" }}</div>
+    <div class="topbar-actions">
+      <button class="btn btn-secondary btn-small theme-toggle" type="button" data-theme-toggle>Light</button>
+      <span class="user-chip">
+        <span class="avatar">{{ user.initials|default:user.username|slice:":2"|upper }}</span>
+        <span>{{ user }}</span>
+      </span>
+      <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button class="btn btn-secondary btn-small" type="submit">Log out</button>
+      </form>
+    </div>
+  </header>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-label">Workspace</div>
+      {% if user.is_superuser or user.role == "ADMIN" %}
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'core:dashboard' %}">
+          <span class="nav-mark"></span>
+          Dashboard
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'lead-list' or request.resolver_match.url_name == 'lead-detail' %}active{% endif %}" href="{% url 'core:lead-list' %}">
+          <span class="nav-mark"></span>
+          Leads
+        </a>
+      {% else %}
+        <a class="nav-link {% if request.resolver_match.url_name == 'lead-list' or request.resolver_match.url_name == 'lead-detail' or request.resolver_match.url_name == 'lead-call-outcome' or request.resolver_match.url_name == 'lead-email-generate' %}active{% endif %}" href="{% url 'core:lead-list' %}">
+          <span class="nav-mark"></span>
+          Leads
+        </a>
+      {% endif %}
+      {% if user.is_superuser or user.role == "ADMIN" %}
+        <a class="nav-link {% if request.resolver_match.url_name == 'activity-list' %}active{% endif %}" href="{% url 'core:activity-list' %}">
+          <span class="nav-mark"></span>
+          Activity
+        </a>
+      {% endif %}
+      {% if user.is_superuser or user.role == "ADMIN" %}
+        <div class="sidebar-label">Admin</div>
+        <a class="nav-link {% if request.resolver_match.url_name == 'agent-list' or request.resolver_match.url_name == 'agent-create' or request.resolver_match.url_name == 'agent-edit' %}active{% endif %}" href="{% url 'core:agent-list' %}">
+          <span class="nav-mark"></span>
+          Agents
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'phone-number-list' %}active{% endif %}" href="{% url 'core:phone-number-list' %}">
+          <span class="nav-mark"></span>
+          Agent Numbers
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'campaign-list' or request.resolver_match.url_name == 'campaign-create' or request.resolver_match.url_name == 'lead-create' %}active{% endif %}" href="{% url 'core:campaign-list' %}">
+          <span class="nav-mark"></span>
+          Campaigns
+        </a>
+        <a class="nav-link" href="{% url 'admin:index' %}">
+          <span class="nav-mark"></span>
+          Django admin
+        </a>
+      {% endif %}
+    </aside>
+    <main class="main">
+      {% if messages %}
+        <div class="messages">
+          {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script>
+    (function () {
+      var button = document.querySelector("[data-theme-toggle]");
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        if (button) {
+          button.textContent = theme === "dark" ? "Light" : "Dark";
+          button.setAttribute("aria-label", "Switch to " + (theme === "dark" ? "light" : "dark") + " theme");
+        }
+      }
+
+      var currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+      applyTheme(currentTheme);
+
+      if (button) {
+        button.addEventListener("click", function () {
+          var nextTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+          applyTheme(nextTheme);
+          try {
+            window.localStorage.setItem("crm-theme", nextTheme);
+          } catch (error) {}
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

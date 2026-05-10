@@ -1,0 +1,46 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Agents</h1>
+      <p class="page-subtitle">Create agents, edit their account details, and review assigned lead progress.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-primary" href="{% url 'core:agent-create' %}">New agent</a>
+    </div>
+  </div>
+
+  <section class="agent-grid">
+    {% for agent in agents %}
+      <article class="agent-card">
+        <div class="agent-card-header">
+          <span class="avatar agent-avatar" {% if agent.color %}style="background: {{ agent.color }};"{% endif %}>{{ agent.initials|default:agent.username|slice:":2"|upper }}</span>
+          <div>
+            <div class="agent-name">{{ agent }}</div>
+            <div class="small muted">{{ agent.username }}</div>
+          </div>
+          <a class="btn btn-secondary btn-small agent-card-action" href="{% url 'core:agent-edit' agent.id %}">Edit</a>
+        </div>
+        <div class="agent-metrics">
+          <div class="metric">
+            <div class="metric-value">{{ agent.total_leads }}</div>
+            <div class="metric-label">Leads</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value">{{ agent.interested_leads }}</div>
+            <div class="metric-label">Hot</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value">{{ agent.demo_leads }}</div>
+            <div class="metric-label">Demos</div>
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="panel">
+        <div class="empty-state">No agents yet.</div>
+      </div>
+    {% endfor %}
+  </section>
+{% endblock %}

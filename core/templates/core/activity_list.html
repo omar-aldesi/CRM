@@ -1,0 +1,49 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Activity</h1>
+      <p class="page-subtitle">Calls, emails, assignments, status changes, and lead imports.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>User</th>
+            <th>Lead</th>
+            <th>Action</th>
+            <th>Outcome</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in activity %}
+            <tr>
+              <td class="small muted">{{ item.created_at|date:"M j, Y H:i" }}</td>
+              <td class="name-cell">{{ item.user|default:"System" }}</td>
+              <td>{% if item.lead %}<a href="{% url 'core:lead-detail' item.lead.id %}">{{ item.lead }}</a>{% else %}-{% endif %}</td>
+              <td>{{ item.get_action_type_display }}</td>
+              <td>
+                {% if item.outcome %}
+                  <span class="badge status-{{ item.outcome|lower }}">{{ item.get_outcome_display }}</span>
+                {% else %}
+                  <span class="muted small">-</span>
+                {% endif %}
+              </td>
+              <td class="small">{{ item.message|default:"-" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="empty-state">No activity yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

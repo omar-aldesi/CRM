@@ -1,0 +1,249 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{% if user.role == "AGENT" %}My Leads{% else %}Leads{% endif %}</h1>
+      <p class="page-subtitle">Review assigned leads, email status, and latest call state.</p>
+    </div>
+    {% if user.is_superuser or user.role == "ADMIN" %}
+      <a class="btn btn-primary" href="{% url 'core:campaign-list' %}">Add lead</a>
+    {% endif %}
+  </div>
+
+  <form class="filters" method="get">
+    <div class="field">
+      <label for="q">Search</label>
+      <input id="q" name="q" value="{{ filters.q }}" placeholder="Business, phone, email, owner">
+    </div>
+    <div class="field">
+      <label for="campaign">Campaign</label>
+      <select id="campaign" name="campaign">
+        <option value="">All</option>
+        {% for campaign in campaigns %}
+          <option value="{{ campaign.id }}" {% if filters.campaign == campaign.id|stringformat:"s" %}selected{% endif %}>{{ campaign.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <option value="">All</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="tier">Tier</label>
+      <select id="tier" name="tier">
+        <option value="">All</option>
+        {% for value, label in tier_choices %}
+          <option value="{{ value }}" {% if filters.tier == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="email_sent">Email</label>
+      <select id="email_sent" name="email_sent">
+        <option value="">All</option>
+        <option value="yes" {% if filters.email_sent == "yes" %}selected{% endif %}>Sent</option>
+        <option value="no" {% if filters.email_sent == "no" %}selected{% endif %}>Not sent</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="phone_called">Phone</label>
+      <select id="phone_called" name="phone_called">
+        <option value="">All</option>
+        <option value="yes" {% if filters.phone_called == "yes" %}selected{% endif %}>Called</option>
+        <option value="no" {% if filters.phone_called == "no" %}selected{% endif %}>Not called</option>
+      </select>
+    </div>
+    {% if user.is_superuser or user.role == "ADMIN" %}
+      <div class="field">
+        <label for="assigned_to">Agent</label>
+        <select id="assigned_to" name="assigned_to">
+          <option value="">All</option>
+          <option value="unassigned" {% if filters.assigned_to == "unassigned" %}selected{% endif %}>Unassigned</option>
+          {% for agent in agents %}
+            <option value="{{ agent.id }}" {% if filters.assigned_to == agent.id|stringformat:"s" %}selected{% endif %}>{{ agent }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    {% endif %}
+    <button class="btn btn-primary" type="submit">Apply</button>
+  </form>
+
+  {% if user.is_superuser or user.role == "ADMIN" %}
+    <form id="bulk-assign-form" class="bulk-assign-form" method="post" action="{% url 'core:lead-bulk-assign' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <div class="bulk-assign-summary">
+        <span class="bulk-count" data-bulk-count>0</span>
+        <span>selected</span>
+      </div>
+      <label class="bulk-agent-field" for="bulk-assigned-to">
+        <span>Assign selected to</span>
+        <select id="bulk-assigned-to" name="assigned_to" required>
+          <option value="">Choose agent</option>
+          {% for agent in agents %}
+            <option value="{{ agent.id }}">{{ agent }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="btn btn-primary" type="submit" data-bulk-submit>Assign leads</button>
+    </form>
+  {% endif %}
+
+  <div class="panel">
+    <div class="table-wrap">
+      <table class="lead-table">
+        <thead>
+          <tr>
+            {% if user.is_superuser or user.role == "ADMIN" %}
+              <th class="select-column">
+                <label class="table-check table-check-all">
+                  <input type="checkbox" data-lead-select-all aria-label="Select all visible leads">
+                  <span>Select all</span>
+                </label>
+              </th>
+            {% endif %}
+            <th>Business</th>
+            <th>Phone</th>
+            <th>City</th>
+            <th>Owner</th>
+            <th>Tier</th>
+            <th>Status</th>
+            <th>Email</th>
+            <th>Notes</th>
+            <th>Assigned</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lead in leads %}
+            <tr>
+              {% if user.is_superuser or user.role == "ADMIN" %}
+                <td class="select-cell">
+                  <input class="lead-select-checkbox" form="bulk-assign-form" type="checkbox" name="lead_ids" value="{{ lead.id }}" data-lead-select aria-label="Select {{ lead.business_name }}">
+                </td>
+              {% endif %}
+              <td class="name-cell">
+                <a href="{% url 'core:lead-detail' lead.id %}">{{ lead.business_name }}</a>
+                <div class="small muted">{{ lead.campaign.name }}</div>
+              </td>
+              <td>
+                <div>{{ lead.phone|default:"-" }}</div>
+                {% if lead.phone_called %}
+                  <span class="badge badge-green">Called</span>
+                {% else %}
+                  <span class="muted small">Not called</span>
+                {% endif %}
+              </td>
+              <td>{{ lead.city|default:"-" }}</td>
+              <td>{{ lead.owner_name|default:"-" }}</td>
+              <td><span class="badge tier-{{ lead.tier }}">T{{ lead.tier }}</span></td>
+              <td><span class="badge status-{{ lead.status|lower }}">{{ lead.get_status_display }}</span></td>
+              <td>
+                <div>{{ lead.email|default:"-" }}</div>
+                {% if lead.email_sent %}
+                  <span class="badge badge-blue">Sent</span>
+                {% else %}
+                  <span class="muted small">Not sent</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if lead.notes_count %}
+                  <span class="badge badge-violet">{{ lead.notes_count }} note{{ lead.notes_count|pluralize }}</span>
+                {% else %}
+                  <span class="muted small">No notes</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if user.is_superuser or user.role == "ADMIN" %}
+                  <form class="lead-assignment-form" method="post" action="{% url 'core:lead-assign' lead.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <select name="assigned_to" aria-label="Assign {{ lead.business_name }}">
+                      <option value="">Unassigned</option>
+                      {% for agent in agents %}
+                        <option value="{{ agent.id }}" {% if lead.assigned_to_id == agent.id %}selected{% endif %}>{{ agent }}</option>
+                      {% endfor %}
+                    </select>
+                    <button class="btn btn-secondary btn-small" type="submit">Save</button>
+                  </form>
+                {% else %}
+                  {{ lead.assigned_to|default:"Unassigned" }}
+                {% endif %}
+              </td>
+              <td>
+                <div class="row-actions">
+                  <a class="btn btn-primary btn-small" href="{% url 'core:lead-detail' lead.id %}">Open</a>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="{% if user.is_superuser or user.role == "ADMIN" %}11{% else %}10{% endif %}" class="empty-state">No leads match this view.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if user.is_superuser or user.role == "ADMIN" %}
+    <script>
+      (function () {
+        var form = document.getElementById("bulk-assign-form");
+        if (!form) {
+          return;
+        }
+
+        var selectAll = document.querySelector("[data-lead-select-all]");
+        var checkboxes = Array.prototype.slice.call(document.querySelectorAll("[data-lead-select]"));
+        var count = document.querySelector("[data-bulk-count]");
+        var submit = form.querySelector("[data-bulk-submit]");
+        var agentSelect = form.querySelector("select[name='assigned_to']");
+
+        function updateBulkState() {
+          var selected = checkboxes.filter(function (checkbox) {
+            return checkbox.checked;
+          }).length;
+
+          if (count) {
+            count.textContent = selected;
+          }
+
+          if (submit) {
+            submit.disabled = selected === 0 || !agentSelect.value;
+          }
+
+          if (selectAll) {
+            selectAll.checked = selected > 0 && selected === checkboxes.length;
+            selectAll.indeterminate = selected > 0 && selected < checkboxes.length;
+          }
+        }
+
+        checkboxes.forEach(function (checkbox) {
+          checkbox.addEventListener("change", updateBulkState);
+        });
+
+        if (selectAll) {
+          selectAll.addEventListener("change", function () {
+            checkboxes.forEach(function (checkbox) {
+              checkbox.checked = selectAll.checked;
+            });
+            updateBulkState();
+          });
+        }
+
+        if (agentSelect) {
+          agentSelect.addEventListener("change", updateBulkState);
+        }
+
+        updateBulkState();
+      })();
+    </script>
+  {% endif %}
+{% endblock %}

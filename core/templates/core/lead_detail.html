@@ -1,0 +1,248 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ lead.business_name }}</h1>
+      <p class="page-subtitle">{{ lead.campaign.name }}{% if lead.city %} - {{ lead.city }}{% endif %}</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-secondary" href="{% url 'core:lead-list' %}">Back to leads</a>
+      {% if user.is_superuser or user.role == "ADMIN" %}
+        <a class="btn btn-primary" href="{% url 'core:lead-assign' lead.id %}">Assign</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <section class="detail-grid">
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Lead details</div>
+          <span class="badge status-{{ lead.status|lower }}">{{ lead.get_status_display }}</span>
+        </div>
+        <div class="panel-body">
+          <div class="kv-grid">
+            <div class="kv">
+              <div class="kv-label">Phone</div>
+              <div class="kv-value">
+                {{ lead.phone|default:"-" }}
+                {% if lead.phone_called %}
+                  <span class="badge badge-green">Called</span>
+                {% else %}
+                  <span class="badge badge-red">Not called</span>
+                {% endif %}
+              </div>
+              {% if lead.phone_called_at %}
+                <div class="small muted">{{ lead.phone_called_at|date:"M j, Y H:i" }}</div>
+              {% endif %}
+            </div>
+            <div class="kv">
+              <div class="kv-label">Email</div>
+              <div class="kv-value">
+                {{ lead.email|default:"-" }}
+                {% if lead.email_sent %}
+                  <span class="badge badge-blue">Sent</span>
+                {% else %}
+                  <span class="badge badge-red">Not sent</span>
+                {% endif %}
+              </div>
+              {% if lead.email_sent_at %}
+                <div class="small muted">{{ lead.email_sent_at|date:"M j, Y H:i" }}</div>
+              {% endif %}
+            </div>
+            <div class="kv">
+              <div class="kv-label">Owner</div>
+              <div class="kv-value">{{ lead.owner_name|default:"-" }}</div>
+            </div>
+            <div class="kv">
+              <div class="kv-label">Business type</div>
+              <div class="kv-value">{{ lead.business_type|default:"-" }}</div>
+            </div>
+            <div class="kv">
+              <div class="kv-label">Score</div>
+              <div class="kv-value">{{ lead.score|default:"-" }}</div>
+            </div>
+            <div class="kv">
+              <div class="kv-label">Tier</div>
+              <div class="kv-value"><span class="badge tier-{{ lead.tier }}">T{{ lead.tier }}</span></div>
+            </div>
+            <div class="kv">
+              <div class="kv-label">Assigned to</div>
+              <div class="kv-value">{{ lead.assigned_to|default:"Unassigned" }}</div>
+            </div>
+          </div>
+          {% if lead.hook %}
+            <div class="note-box mt-12">
+              <strong>Hook</strong>
+              <div class="prewrap small">{{ lead.hook }}</div>
+            </div>
+          {% endif %}
+          {% if lead.warning %}
+            <div class="note-box mt-12">
+              <strong>Warning</strong>
+              <div class="prewrap small">{{ lead.warning }}</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Notes</div>
+        </div>
+        <div class="panel-body">
+          {% if notes %}
+            <div class="timeline">
+              {% for note in notes %}
+                <div class="note-box">
+                  <div><strong>{{ note.agent|default:"System" }}</strong> <span class="small muted">{{ note.created_at|date:"M j, Y H:i" }}</span></div>
+                  <div class="soft-gap"><span class="badge badge-violet">{{ note.get_channel_display }}</span></div>
+                  {% if note.outcome %}
+                    <div class="soft-gap"><span class="badge status-{{ note.outcome|lower }}">{{ note.get_outcome_display }}</span></div>
+                  {% endif %}
+                  <div class="prewrap">{{ note.note }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">No notes yet.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Emails</div>
+          <a class="btn btn-secondary btn-small" href="{% url 'core:lead-email-generate' lead.id %}">Generate</a>
+        </div>
+        <div class="panel-body">
+          {% if lead.email_sent %}
+            <div class="message success">Email sent{% if lead.email_sent_at %} on {{ lead.email_sent_at|date:"M j, Y" }}{% endif %}. Use this lead as a warm call.</div>
+          {% endif %}
+          {% if emails %}
+            <div class="timeline">
+              {% for email in emails %}
+                <div class="email-box">
+                  <div><strong>{{ email.subject }}</strong></div>
+                  <div class="small muted">{{ email.get_status_display }} - {{ email.created_at|date:"M j, Y H:i" }}</div>
+                  <div class="prewrap small mt-8">{{ email.body }}</div>
+                  {% if email.status != "SENT" %}
+                    <form class="mt-10" method="post" action="{% url 'core:email-mark-sent' email.id %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.path }}">
+                      <div class="field mb-8">
+                        <label for="email-note-{{ email.id }}">Email note</label>
+                        <textarea id="email-note-{{ email.id }}" name="note" rows="3" placeholder="What happened with this email?"></textarea>
+                      </div>
+                      <button class="btn btn-primary btn-small" type="submit">Mark email done</button>
+                    </form>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">No emails generated yet.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if user.is_superuser or user.role == "ADMIN" %}
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Activity</div>
+          </div>
+          <div class="panel-body">
+            {% if activity %}
+              <div class="timeline">
+                {% for item in activity %}
+                  <div class="timeline-item">
+                    <div><strong>{{ item.get_action_type_display }}</strong></div>
+                    <div class="small muted">{{ item.user|default:"System" }} - {{ item.created_at|date:"M j, Y H:i" }}</div>
+                    {% if item.message %}<div class="small">{{ item.message }}</div>{% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state">No activity yet.</div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <aside class="grid">
+      {% if user.is_superuser or user.role == "ADMIN" %}
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Assignment</div>
+          </div>
+          <div class="panel-body">
+            <form method="post" action="{% url 'core:lead-assign' lead.id %}">
+              {% csrf_token %}
+              <div class="field">
+                {{ assignment_form.assigned_to.label_tag }}
+                {{ assignment_form.assigned_to }}
+                {{ assignment_form.assigned_to.errors }}
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Email work</div>
+        </div>
+        <div class="panel-body">
+          {% if lead.email_sent %}
+            <div class="message success">Email is done{% if lead.email_sent_at %} on {{ lead.email_sent_at|date:"M j, Y" }}{% endif %}.</div>
+          {% else %}
+            <form class="mb-14" method="post" action="{% url 'core:lead-email-mark-sent' lead.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}">
+              <div class="field">
+                <label for="email-note">Email note</label>
+                <textarea id="email-note" name="note" rows="4" placeholder="What happened with this email?"></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Mark email done</button>
+              </div>
+            </form>
+          {% endif %}
+          <form method="post" action="{% url 'core:lead-email-generate' lead.id %}">
+            {% csrf_token %}
+            <div class="grid">
+              {% include "core/_form_fields.html" with form=email_form %}
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Generate</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {% if user.role == "AGENT" %}
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Phone work</div>
+          </div>
+          <div class="panel-body">
+            <form method="post" action="{% url 'core:lead-call-outcome' lead.id %}">
+              {% csrf_token %}
+              <div class="grid">
+                {% include "core/_form_fields.html" with form=call_form %}
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Save phone note</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+    </aside>
+  </section>
+{% endblock %}

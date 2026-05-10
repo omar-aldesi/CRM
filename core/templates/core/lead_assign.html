@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Assign Lead</h1>
+      <p class="page-subtitle">{{ lead.business_name }}</p>
+    </div>
+    <a class="btn btn-secondary" href="{% if next_url %}{{ next_url }}{% else %}{% url 'core:lead-detail' lead.id %}{% endif %}">Back</a>
+  </div>
+
+  <form class="form-panel" method="post">
+    {% csrf_token %}
+    {% if next_url %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+    {% endif %}
+    <div class="form-grid">
+      {% include "core/_form_fields.html" %}
+    </div>
+    <div class="form-actions">
+      <a class="btn btn-secondary" href="{% if next_url %}{{ next_url }}{% else %}{% url 'core:lead-detail' lead.id %}{% endif %}">Cancel</a>
+      <button class="btn btn-primary" type="submit">Save assignment</button>
+    </div>
+  </form>
+{% endblock %}

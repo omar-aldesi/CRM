@@ -1,0 +1,125 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Emails</h1>
+      <p class="page-subtitle">Generate emails before calls and track sent status.</p>
+    </div>
+  </div>
+
+  <section class="grid stats">
+    <div class="stat">
+      <div class="stat-value">{{ stats.sent }}</div>
+      <div class="stat-label">Sent</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ stats.not_sent }}</div>
+      <div class="stat-label">Not sent</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ rows|length }}</div>
+      <div class="stat-label">Showing</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ user.role|title }}</div>
+      <div class="stat-label">View scope</div>
+    </div>
+  </section>
+
+  <form class="filters" method="get">
+    <div class="field">
+      <label for="q">Search</label>
+      <input id="q" name="q" value="{{ filters.q }}" placeholder="Business, phone, owner">
+    </div>
+    <div class="field">
+      <label for="tier">Tier</label>
+      <select id="tier" name="tier">
+        <option value="">All</option>
+        {% for value, label in tier_choices %}
+          <option value="{{ value }}" {% if filters.tier == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="email_sent">Email</label>
+      <select id="email_sent" name="email_sent">
+        <option value="">All</option>
+        <option value="yes" {% if filters.email_sent == "yes" %}selected{% endif %}>Sent</option>
+        <option value="no" {% if filters.email_sent == "no" %}selected{% endif %}>Not sent</option>
+      </select>
+    </div>
+    {% if user.is_superuser or user.role == "ADMIN" %}
+      <div class="field">
+        <label for="assigned_to">Agent</label>
+        <select id="assigned_to" name="assigned_to">
+          <option value="">All</option>
+          <option value="unassigned" {% if filters.assigned_to == "unassigned" %}selected{% endif %}>Unassigned</option>
+          {% for agent in agents %}
+            <option value="{{ agent.id }}" {% if filters.assigned_to == agent.id|stringformat:"s" %}selected{% endif %}>{{ agent }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    {% endif %}
+    <button class="btn btn-primary" type="submit">Apply</button>
+  </form>
+
+  <div class="panel">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Business</th>
+            <th>Owner</th>
+            <th>Tier</th>
+            <th>Hook</th>
+            <th>Email status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td class="name-cell">
+                {% if user.is_superuser or user.role == "ADMIN" %}
+                  <a href="{% url 'core:lead-detail' row.lead.id %}">{{ row.lead.business_name }}</a>
+                {% else %}
+                  {{ row.lead.business_name }}
+                {% endif %}
+                <div class="small muted">{{ row.lead.campaign.name }}</div>
+              </td>
+              <td>{{ row.lead.owner_name|default:"-" }}</td>
+              <td><span class="badge tier-{{ row.lead.tier }}">T{{ row.lead.tier }}</span></td>
+              <td class="small muted">{{ row.lead.hook|truncatechars:90|default:"-" }}</td>
+              <td>
+                {% if row.lead.email_sent %}
+                  <span class="badge badge-blue">Sent</span>
+                {% elif row.latest_email %}
+                  <span class="badge badge-violet">{{ row.latest_email.get_status_display }}</span>
+                {% else %}
+                  <span class="muted small">Not generated</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="row-actions">
+                  <a class="btn btn-secondary btn-small" href="{% url 'core:lead-email-generate' row.lead.id %}">Generate</a>
+                  {% if row.latest_email and row.latest_email.status != "SENT" %}
+                    <form method="post" action="{% url 'core:email-mark-sent' row.latest_email.id %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.path }}">
+                      <button class="btn btn-primary btn-small" type="submit">Mark sent</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="empty-state">No leads match this email view.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

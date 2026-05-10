@@ -1,0 +1,148 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Phone Numbers</h1>
+      <p class="page-subtitle">Manage outbound numbers, agent assignment, call order, and daily usage capacity.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-secondary" href="{% url 'core:agent-list' %}">Agents</a>
+    </div>
+  </div>
+
+  <section class="grid stats phone-stats">
+    <div class="stat">
+      <div class="stat-value">{{ phone_stats.total }}</div>
+      <div class="stat-label">Total numbers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ phone_stats.assigned }}</div>
+      <div class="stat-label">Assigned</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ phone_stats.available }}</div>
+      <div class="stat-label">Available now</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ phone_stats.limited }}</div>
+      <div class="stat-label">Limit reached</div>
+    </div>
+  </section>
+
+  <section class="panel phone-create-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Add outbound number</div>
+        <div class="small muted">Create a number and optionally assign it to an agent.</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <form class="phone-create-form" method="post">
+        {% csrf_token %}
+        <div class="form-grid phone-create-grid">
+          {% include "core/_form_fields.html" %}
+        </div>
+        <div class="form-actions phone-create-actions">
+          <button class="btn btn-primary" type="submit">Add number</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel phone-table-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Number pool</div>
+        <div class="small muted">Edit assignments and limits directly from each row.</div>
+      </div>
+      <span class="badge badge-blue">{{ phone_stats.total }} total</span>
+    </div>
+    <div class="table-wrap phone-table-wrap">
+      <table class="phone-number-table">
+        <thead>
+          <tr>
+            <th>Number</th>
+            <th>Agent</th>
+            <th>Capacity</th>
+            <th>Assignment and limits</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for phone_number in phone_numbers %}
+            <tr>
+              <td class="name-cell phone-number-cell">
+                <div class="phone-number-value">{{ phone_number.phone }}</div>
+                <div class="small muted">Priority order {{ phone_number.order }}</div>
+              </td>
+              <td>
+                {% if phone_number.agent %}
+                  <div class="agent-inline">
+                    <span class="avatar avatar-small">{{ phone_number.agent.initials|default:phone_number.agent.username|slice:":2"|upper }}</span>
+                    <div>
+                      <div class="agent-inline-name">{{ phone_number.agent }}</div>
+                      <div class="small muted">{{ phone_number.agent.username }}</div>
+                    </div>
+                  </div>
+                {% else %}
+                  <span class="badge">Unassigned</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="usage-block">
+                  <div class="usage-copy">
+                    <strong>{{ phone_number.usage_count }}</strong>
+                    <span class="muted">/ {{ phone_number.usage_limit }} calls</span>
+                  </div>
+                  {% if phone_number.usage_limit > 0 %}
+                    <meter class="usage-meter" min="0" max="{{ phone_number.usage_limit }}" value="{{ phone_number.usage_count }}"></meter>
+                  {% else %}
+                    <div class="usage-meter usage-meter-empty"></div>
+                  {% endif %}
+                  <div>
+                    {% if phone_number.is_available %}
+                      <span class="badge badge-green">{{ phone_number.usage_remaining }} remaining</span>
+                    {% else %}
+                      <span class="badge badge-red">Limit reached</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <form class="phone-edit-form" method="post" action="{% url 'core:phone-number-assign' phone_number.id %}">
+                  {% csrf_token %}
+                  <label>
+                    <span>Agent</span>
+                    <select name="agent">
+                      <option value="">Unassigned</option>
+                      {% for agent in agents %}
+                        <option value="{{ agent.id }}" {% if phone_number.agent_id == agent.id %}selected{% endif %}>{{ agent }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Order</span>
+                    <input name="order" type="number" min="1" value="{{ phone_number.order }}">
+                  </label>
+                  <label>
+                    <span>Limit</span>
+                    <input name="usage_limit" type="number" min="0" value="{{ phone_number.usage_limit }}">
+                  </label>
+                  <label>
+                    <span>Used</span>
+                    <input name="usage_count" type="number" min="0" value="{{ phone_number.usage_count }}">
+                  </label>
+                  <button class="btn btn-primary btn-small" type="submit">Save</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="empty-state">No phone numbers yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

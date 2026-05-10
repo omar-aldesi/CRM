@@ -1,0 +1,89 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ form_title|default:"Agent" }}</h1>
+      <p class="page-subtitle">{{ form_subtitle|default:"Agents log in normally and only see leads assigned to them." }}</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-secondary" href="{% url 'core:agent-list' %}">Back</a>
+    </div>
+  </div>
+
+  <section class="{% if agent %}agent-edit-layout{% endif %}">
+    <form class="form-panel agent-form-panel" method="post">
+      {% csrf_token %}
+      <div class="form-grid">
+        {% include "core/_form_fields.html" %}
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-secondary" href="{% url 'core:agent-list' %}">Cancel</a>
+        <button class="btn btn-primary" type="submit">{{ submit_label|default:"Save agent" }}</button>
+      </div>
+    </form>
+
+    {% if agent %}
+      <aside class="grid agent-edit-aside">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Agent summary</div>
+            {% if agent.is_active %}
+              <span class="badge badge-green">Active</span>
+            {% else %}
+              <span class="badge badge-red">Inactive</span>
+            {% endif %}
+          </div>
+          <div class="panel-body">
+            <div class="agent-profile">
+              <span class="avatar agent-avatar" {% if agent.color %}style="background: {{ agent.color }};"{% endif %}>{{ agent.initials|default:agent.username|slice:":2"|upper }}</span>
+              <div>
+                <div class="agent-name">{{ agent }}</div>
+                <div class="small muted">{{ agent.email|default:agent.username }}</div>
+              </div>
+            </div>
+            <div class="agent-metrics compact-metrics">
+              <div class="metric">
+                <div class="metric-value">{{ agent_stats.total_leads }}</div>
+                <div class="metric-label">Leads</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">{{ agent_stats.interested_leads }}</div>
+                <div class="metric-label">Hot</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">{{ agent_stats.demo_leads }}</div>
+                <div class="metric-label">Demos</div>
+              </div>
+            </div>
+            <div class="row-actions mt-12">
+              <a class="btn btn-secondary btn-small" href="{% url 'core:lead-list' %}?assigned_to={{ agent.id }}">View leads</a>
+              <a class="btn btn-secondary btn-small" href="{% url 'core:phone-number-list' %}">Phone numbers</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Assigned numbers</div>
+            <span class="badge badge-blue">{{ agent_stats.phone_numbers }}</span>
+          </div>
+          <div class="panel-body">
+            {% if phone_numbers %}
+              <div class="phone-chip-list">
+                {% for phone_number in phone_numbers %}
+                  <span class="phone-chip {% if phone_number.is_available %}active{% endif %}">
+                    <span class="phone-chip-label">#{{ phone_number.order }}</span>
+                    {{ phone_number.phone }}
+                  </span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state">No numbers assigned.</div>
+            {% endif %}
+          </div>
+        </div>
+      </aside>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">New Campaign</h1>
+      <p class="page-subtitle">Campaigns group leads by niche, location, or outreach push.</p>
+    </div>
+    <a class="btn btn-secondary" href="{% url 'core:campaign-list' %}">Back</a>
+  </div>
+
+  <form class="form-panel" method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+      {% include "core/_form_fields.html" %}
+    </div>
+    <div class="form-actions">
+      <a class="btn btn-secondary" href="{% url 'core:campaign-list' %}">Cancel</a>
+      <button class="btn btn-primary" type="submit">Create campaign</button>
+    </div>
+  </form>
+{% endblock %}
