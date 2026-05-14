@@ -26,7 +26,8 @@ def env_list(name, default=None):
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-DEBUG = os.environ.get("DEBUG", "False")
+RENDER = True
+DEBUG = env_bool("DEBUG", default=not RENDER)
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
@@ -99,48 +100,38 @@ WSGI_APPLICATION = "crm.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-if DEBUG:
-    # Use SQLite for development
+
+# Use PostgreSQL for production
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
 else:
-    # Use PostgreSQL for production
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-
-    if DATABASE_URL:
-        DATABASES = {
-            "default": dj_database_url.parse(
-                DATABASE_URL,
-                conn_max_age=600,
-                conn_health_checks=True,
-            )
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("POSTGRES_DB", os.environ.get("DB_NAME", "crm")),
+            "USER": os.environ.get(
+                "POSTGRES_USER", os.environ.get("DB_USER", "postgres")
+            ),
+            "PASSWORD": os.environ.get(
+                "POSTGRES_PASSWORD",
+                os.environ.get("DB_PASSWORD", "postgres"),
+            ),
+            "HOST": os.environ.get(
+                "POSTGRES_HOST", os.environ.get("DB_HOST", "localhost")
+            ),
+            "PORT": os.environ.get("POSTGRES_PORT", os.environ.get("DB_PORT", "5432")),
+            "CONN_MAX_AGE": 600,
+            "CONN_HEALTH_CHECKS": True,
         }
-    else:
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.postgresql",
-                "NAME": os.environ.get("POSTGRES_DB", os.environ.get("DB_NAME", "crm")),
-                "USER": os.environ.get(
-                    "POSTGRES_USER", os.environ.get("DB_USER", "postgres")
-                ),
-                "PASSWORD": os.environ.get(
-                    "POSTGRES_PASSWORD",
-                    os.environ.get("DB_PASSWORD", "postgres"),
-                ),
-                "HOST": os.environ.get(
-                    "POSTGRES_HOST", os.environ.get("DB_HOST", "localhost")
-                ),
-                "PORT": os.environ.get(
-                    "POSTGRES_PORT", os.environ.get("DB_PORT", "5432")
-                ),
-                "CONN_MAX_AGE": 600,
-                "CONN_HEALTH_CHECKS": True,
-            }
-        }
+    }
 
 
 # Password validation
