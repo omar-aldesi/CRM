@@ -3,6 +3,10 @@ from pathlib import Path
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,7 +26,7 @@ def env_list(name, default=None):
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-DEBUG = env_bool("DEBUG", default=not env_bool("RENDER"))
+DEBUG = os.environ.get("DEBUG", "False")
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
