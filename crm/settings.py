@@ -30,7 +30,15 @@ if not SECRET_KEY:
         raise ImproperlyConfigured("Set the SECRET_KEY environment variable.")
     SECRET_KEY = "django-insecure-!_i7)os!(nc1fay6nop_4@6*b+-eqq+m4p02e*=!7cbq4b(fpk"
 
-ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", ["localhost", "127.0.0.1", "[::1]"])
+ALLOWED_HOSTS = env_list(
+    "ALLOWED_HOSTS",
+    [
+        "localhost",
+        "127.0.0.1",
+        "[::1]",
+        "specialists-detector-numerical-references.trycloudflare.com",
+    ],
+)
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -87,32 +95,48 @@ WSGI_APPLICATION = "crm.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
-
-if DATABASE_URL:
-    DATABASES = {
-        "default": dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-else:
+if DEBUG:
+    # Use SQLite for development
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("POSTGRES_DB", os.environ.get("DB_NAME", "crm")),
-            "USER": os.environ.get("POSTGRES_USER", os.environ.get("DB_USER", "postgres")),
-            "PASSWORD": os.environ.get(
-                "POSTGRES_PASSWORD",
-                os.environ.get("DB_PASSWORD", "postgres"),
-            ),
-            "HOST": os.environ.get("POSTGRES_HOST", os.environ.get("DB_HOST", "localhost")),
-            "PORT": os.environ.get("POSTGRES_PORT", os.environ.get("DB_PORT", "5432")),
-            "CONN_MAX_AGE": 600,
-            "CONN_HEALTH_CHECKS": True,
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+else:
+    # Use PostgreSQL for production
+    DATABASE_URL = os.environ.get("DATABASE_URL")
+
+    if DATABASE_URL:
+        DATABASES = {
+            "default": dj_database_url.parse(
+                DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+    else:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": os.environ.get("POSTGRES_DB", os.environ.get("DB_NAME", "crm")),
+                "USER": os.environ.get(
+                    "POSTGRES_USER", os.environ.get("DB_USER", "postgres")
+                ),
+                "PASSWORD": os.environ.get(
+                    "POSTGRES_PASSWORD",
+                    os.environ.get("DB_PASSWORD", "postgres"),
+                ),
+                "HOST": os.environ.get(
+                    "POSTGRES_HOST", os.environ.get("DB_HOST", "localhost")
+                ),
+                "PORT": os.environ.get(
+                    "POSTGRES_PORT", os.environ.get("DB_PORT", "5432")
+                ),
+                "CONN_MAX_AGE": 600,
+                "CONN_HEALTH_CHECKS": True,
+            }
+        }
 
 
 # Password validation

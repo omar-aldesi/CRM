@@ -9,6 +9,7 @@
     <div class="page-actions">
       <a class="btn btn-secondary" href="{% url 'core:lead-list' %}">Back to leads</a>
       {% if user.is_superuser or user.role == "ADMIN" %}
+        <a class="btn btn-secondary" href="{% url 'core:lead-edit' lead.id %}">Edit</a>
         <a class="btn btn-primary" href="{% url 'core:lead-assign' lead.id %}">Assign</a>
       {% endif %}
     </div>

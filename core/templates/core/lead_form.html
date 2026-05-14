@@ -3,7 +3,7 @@
 {% block content %}
   <div class="page-header">
     <div>
-      <h1 class="page-title">New Lead</h1>
+      <h1 class="page-title">{{ page_title }}</h1>
       <p class="page-subtitle">{{ campaign.name }}</p>
     </div>
     <a class="btn btn-secondary" href="{% url 'core:campaign-list' %}">Back</a>
@@ -16,7 +16,7 @@
     </div>
     <div class="form-actions">
       <a class="btn btn-secondary" href="{% url 'core:campaign-list' %}">Cancel</a>
-      <button class="btn btn-primary" type="submit">Add lead</button>
+      <button class="btn btn-primary" type="submit">{{ submit_text|default:'Add lead' }}</button>
     </div>
   </form>
 {% endblock %}

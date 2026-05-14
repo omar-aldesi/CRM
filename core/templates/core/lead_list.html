@@ -7,7 +7,10 @@
       <p class="page-subtitle">Review assigned leads, email status, and latest call state.</p>
     </div>
     {% if user.is_superuser or user.role == "ADMIN" %}
+    <div>
+      <button class="btn btn-primary" id="import-leads-btn">Import Leads</button>
       <a class="btn btn-primary" href="{% url 'core:campaign-list' %}">Add lead</a>
+    </div>
     {% endif %}
   </div>
 
@@ -245,5 +248,352 @@
         updateBulkState();
       })();
     </script>
+
+    <!-- Import Leads Modal -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var modal = document.getElementById("import-leads-modal");
+        var openBtn = document.getElementById("import-leads-btn");
+        var closeBtn = document.getElementById("import-modal-close");
+        var cancelBtn = document.getElementById("import-modal-cancel");
+        var form = document.getElementById("import-leads-form");
+        var dropZone = document.getElementById("drop-zone");
+        var fileInput = document.getElementById("excel-file-input");
+        var campaignSelect = document.getElementById("import-campaign-select");
+        var fileDisplay = document.getElementById("selected-file");
+        var submitBtn = document.getElementById("import-modal-submit");
+
+        if (!modal || !openBtn) return;
+
+        // Open modal
+        openBtn.addEventListener("click", function () {
+          modal.style.display = "flex";
+        });
+
+        // Close modal
+        function closeModal() {
+          modal.style.display = "none";
+          fileInput.value = "";
+          campaignSelect.value = "";
+          fileDisplay.textContent = "";
+          submitBtn.disabled = true;
+          form.reset();
+        }
+
+        function updateSubmitState() {
+          submitBtn.disabled = fileInput.files.length === 0 || !campaignSelect.value;
+        }
+
+        closeBtn.addEventListener("click", closeModal);
+        cancelBtn.addEventListener("click", closeModal);
+        
+        // Close modal when clicking outside
+        modal.addEventListener("click", function (e) {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+
+        // File selection via input
+        fileInput.addEventListener("change", function () {
+          if (this.files.length > 0) {
+            updateFileDisplay(this.files[0]);
+          }
+          updateSubmitState();
+        });
+
+        campaignSelect.addEventListener("change", updateSubmitState);
+
+        // Drag and drop
+        dropZone.addEventListener("dragover", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add("dragover");
+        });
+
+        dropZone.addEventListener("dragleave", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove("dragover");
+        });
+
+        dropZone.addEventListener("drop", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove("dragover");
+
+          var files = e.dataTransfer.files;
+          if (files.length > 0) {
+            fileInput.files = files;
+            updateFileDisplay(files[0]);
+          }
+        });
+
+        function updateFileDisplay(file) {
+          fileDisplay.textContent = file.name;
+          updateSubmitState();
+        }
+
+        // Make browse button trigger file input
+        document.getElementById("browse-btn").addEventListener("click", function () {
+          document.getElementById("excel-file-input").click();
+        });
+
+        // Close modal on successful form submission
+        form.addEventListener("submit", function () {
+          setTimeout(function () {
+            closeModal();
+          }, 500);
+        });
+      });
+    </script>
+
+    <!-- Modal Styles -->
+    <style>
+      #import-leads-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.4);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 54px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-raised);
+        flex-shrink: 0;
+      }
+
+      .modal-header h2 {
+        margin: 0;
+        color: var(--text-strong);
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .modal-close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--muted);
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 160ms ease;
+      }
+
+      .modal-close-btn:hover {
+        color: var(--text-strong);
+      }
+
+      .modal-body {
+        padding: 24px 24px 20px;
+        flex: 1;
+        display: grid;
+        gap: 20px;
+      }
+
+      .modal-body p {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 0;
+      }
+
+      .modal-body .field {
+        margin: 0;
+      }
+
+      .modal-body label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .modal-body select {
+        width: 100%;
+      }
+
+      #drop-zone {
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius);
+        padding: 28px;
+        text-align: center;
+        cursor: pointer;
+        transition: background 160ms ease, border-color 160ms ease;
+        background-color: var(--surface-2);
+        min-height: 200px;
+        display: grid;
+        gap: 14px;
+        align-items: center;
+        justify-items: center;
+      }
+
+      #drop-zone:hover {
+        border-color: var(--primary);
+        background-color: var(--primary-soft);
+      }
+
+      #drop-zone.dragover {
+        border-color: var(--primary);
+        background-color: var(--primary-soft);
+      }
+
+      .drop-zone-text {
+        color: var(--text);
+        font-size: 14px;
+        margin: 0;
+      }
+
+      .drop-zone-text strong {
+        display: block;
+        color: var(--text-strong);
+        font-size: 16px;
+        font-weight: 800;
+        margin-bottom: 6px;
+      }
+
+      .drop-zone-or {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 0;
+      }
+
+      .file-input-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary);
+        color: var(--primary-contrast);
+        padding: 11px 18px;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        border: none;
+        transition: background 160ms ease, transform 160ms ease;
+      }
+
+      .file-input-btn:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+      }
+
+      .file-input-btn:active {
+        transform: translateY(0);
+      }
+
+      #excel-file-input {
+        display: none;
+      }
+
+      #selected-file {
+        display: block;
+        margin-top: 0;
+        padding: 14px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        font-size: 13px;
+        min-height: 40px;
+        width: 100%;
+      }
+
+      #selected-file:empty {
+        display: none;
+      }
+
+      .modal-footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 18px 24px;
+        border-top: 1px solid var(--border);
+        background: var(--surface-raised);
+        flex-shrink: 0;
+      }
+
+      .modal-footer .btn {
+        min-width: 110px;
+      }
+
+      @media (max-width: 540px) {
+        .modal-content {
+          max-width: 100%;
+          margin: 0 12px;
+        }
+
+        #drop-zone {
+          padding: 22px;
+        }
+      }
+    </style>
+
+    <!-- Import Modal HTML -->
+    <div id="import-leads-modal">
+      <div class="modal-content">
+        <form id="import-leads-form" method="post" enctype="multipart/form-data" action="{% url 'core:lead-import' %}">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h2>Import Leads</h2>
+            <button class="modal-close-btn" id="import-modal-close" type="button">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p>Choose a campaign for this import and upload an Excel or CSV file. Each row will be added to the selected campaign.</p>
+            <div class="field">
+              <label for="import-campaign-select">Campaign</label>
+              <select id="import-campaign-select" name="campaign_id" required>
+                <option value="">Choose campaign</option>
+                {% for campaign in campaigns %}
+                  <option value="{{ campaign.id }}">{{ campaign.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div id="drop-zone">
+              <div class="drop-zone-text">
+                <strong>Drag and drop your Excel file here</strong>
+                or
+              </div>
+              <div class="drop-zone-or">— or —</div>
+              <button type="button" class="file-input-btn" id="browse-btn">Browse Files</button>
+              <input type="file" id="excel-file-input" name="excel_file" accept=".xlsx,.xls,.csv" aria-label="Select Excel file" required>
+            </div>
+            <div id="selected-file"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="import-modal-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="import-modal-submit" disabled>Import</button>
+          </div>
+        </form>
+      </div>
+    </div>
   {% endif %}
 {% endblock %}

@@ -2,7 +2,6 @@ from django.urls import path
 
 from core import views
 
-
 app_name = "core"
 
 urlpatterns = [
@@ -25,7 +24,9 @@ urlpatterns = [
         name="lead-create",
     ),
     path("leads/", views.lead_list, name="lead-list"),
+    path("leads/import/", views.lead_import, name="lead-import"),
     path("leads/bulk-assign/", views.lead_bulk_assign, name="lead-bulk-assign"),
+    path("leads/<int:lead_id>/edit/", views.lead_edit, name="lead-edit"),
     path("leads/<int:lead_id>/", views.lead_detail, name="lead-detail"),
     path("leads/<int:lead_id>/assign/", views.lead_assign, name="lead-assign"),
     path("emails/", views.email_list, name="email-list"),

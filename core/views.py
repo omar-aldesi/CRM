@@ -29,6 +29,8 @@ from core.services import (
     mark_phone_called,
     record_call_outcome,
 )
+import openpyxl
+from django.db import transaction
 
 
 @login_required
@@ -446,7 +448,11 @@ def lead_bulk_assign(request):
     if not leads:
         if _wants_json(request):
             return JsonResponse(
-                {"errors": {"lead_ids": [{"message": "No matching leads were found."}]}},
+                {
+                    "errors": {
+                        "lead_ids": [{"message": "No matching leads were found."}]
+                    }
+                },
                 status=400,
             )
         messages.error(request, "No matching leads were found.")
@@ -478,6 +484,76 @@ def lead_bulk_assign(request):
         messages.success(request, f"Selected leads were already assigned to {agent}.")
 
     return redirect(next_url or "core:lead-list")
+
+
+@login_required
+@require_POST
+def lead_import(request):
+    permission_response = _require_admin(request.user)
+    if permission_response:
+        return permission_response
+
+    campaign_id = request.POST.get("campaign_id")
+    if not campaign_id:
+        messages.error(request, "Select a campaign before importing leads.")
+        return redirect("core:lead-list")
+
+    campaign = get_object_or_404(Campaign, pk=campaign_id)
+
+    if "excel_file" not in request.FILES:
+        messages.error(request, "Please select a file to import.")
+        return redirect("core:lead-list")
+
+    excel_file = request.FILES["excel_file"]
+
+    workbook = openpyxl.load_workbook(excel_file)
+    sheet = workbook.active
+
+    header_skipped = False
+
+    def clean(value):
+        return str(value).strip() if value is not None else ""
+
+    try:
+        with transaction.atomic():
+            for row in sheet.iter_rows(values_only=True):
+
+                if all(cell is None for cell in row):
+                    continue
+
+                if not header_skipped:
+                    header_skipped = True
+                    continue
+
+                name = row[0]
+                phone = row[1]
+                city = row[2]
+                state = row[3]
+                full_location = row[4]
+                rating = row[5]
+                num_reviews = row[6]
+                website = row[7]
+
+                Lead.objects.get_or_create(
+                    campaign=campaign,
+                    business_name=clean(name),
+                    defaults={
+                        "phone": clean(phone),
+                        "city": clean(city),
+                        "state": clean(state),
+                        "score": clean(rating),
+                        "num_of_reviews": clean(num_reviews),
+                        "website": clean(website),
+                        "location": clean(full_location),
+                    },
+                )
+
+    except Exception as e:
+        messages.error(request, f"Import failed, nothing was saved. Reason: {str(e)}")
+        return redirect("core:lead-list")
+
+    messages.success(request, "Leads imported successfully.")
+    return redirect("core:lead-list")
 
 
 @login_required
@@ -542,6 +618,93 @@ def lead_create(request, campaign_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
+def lead_edit(request, lead_id):
+    permission_response = _require_admin(request.user)
+    if permission_response:
+        return permission_response
+
+    lead = get_object_or_404(Lead, pk=lead_id)
+    campaign = lead.campaign
+
+    if request.method == "GET":
+        form = ManualLeadForm(
+            initial={
+                "assigned_to": lead.assigned_to,
+                "business_name": lead.business_name,
+                "phone": lead.phone,
+                "email": lead.email,
+                "city": lead.city,
+                "owner_name": lead.owner_name,
+                "business_type": lead.business_type,
+                "score": lead.score,
+                "tier": lead.tier,
+                "status": lead.status,
+                "hook": lead.hook,
+                "warning": lead.warning,
+            }
+        )
+        if _wants_json(request):
+            return JsonResponse(
+                {
+                    "lead": _serialize_lead(lead),
+                    "fields": list(ManualLeadForm.base_fields),
+                }
+            )
+        return render(
+            request,
+            "core/lead_form.html",
+            {
+                "page_title": "Edit Lead",
+                "submit_text": "Save changes",
+                "campaign": campaign,
+                "form": form,
+            },
+        )
+
+    form = ManualLeadForm(request.POST)
+    if form.is_valid():
+        try:
+            lead.assigned_to = form.cleaned_data["assigned_to"]
+            lead.business_name = form.cleaned_data["business_name"].strip()
+            lead.phone = form.cleaned_data["phone"].strip()
+            lead.email = form.cleaned_data["email"].strip()
+            lead.city = form.cleaned_data["city"].strip()
+            lead.owner_name = form.cleaned_data["owner_name"].strip()
+            lead.business_type = form.cleaned_data["business_type"].strip() or "Roofing"
+            lead.score = form.cleaned_data["score"].strip()
+            lead.tier = form.cleaned_data["tier"]
+            lead.status = form.cleaned_data["status"]
+            lead.hook = form.cleaned_data["hook"].strip()
+            lead.warning = form.cleaned_data["warning"].strip()
+            lead.save()
+        except IntegrityError:
+            form.add_error("phone", "Lead phone already exists in this campaign.")
+        except Exception as error:
+            return _service_error_response(error)
+        else:
+            if _wants_json(request):
+                return JsonResponse({"lead": _serialize_lead(lead)})
+            messages.success(request, "Lead updated.")
+            return redirect("core:lead-detail", lead_id=lead.id)
+
+    if _wants_json(request):
+        return _form_error_response(form)
+
+    return render(
+        request,
+        "core/lead_form.html",
+        {
+            "page_title": "Edit Lead",
+            "submit_text": "Save changes",
+            "campaign": campaign,
+            "form": form,
+        },
+        status=400,
+    )
+
+
+@login_required
 @require_GET
 def lead_detail(request, lead_id):
     lead = get_object_or_404(
@@ -555,18 +718,18 @@ def lead_detail(request, lead_id):
     emails = lead.emails.select_related("created_by").order_by("-created_at")
     activity = ActivityLog.objects.none()
     if _is_admin(request.user):
-        activity = lead.activities.select_related("user", "lead").order_by("-created_at")[
-            :25
-        ]
+        activity = lead.activities.select_related("user", "lead").order_by(
+            "-created_at"
+        )[:25]
 
     if _wants_json(request):
         return JsonResponse(
             {
                 "lead": _serialize_lead(lead),
-            "notes": [_serialize_note(note) for note in notes],
-            "phone_notes": [_serialize_note(note) for note in phone_notes],
-            "email_notes": [_serialize_note(note) for note in email_notes],
-            "emails": [_serialize_email(email) for email in emails],
+                "notes": [_serialize_note(note) for note in notes],
+                "phone_notes": [_serialize_note(note) for note in phone_notes],
+                "email_notes": [_serialize_note(note) for note in email_notes],
+                "emails": [_serialize_email(email) for email in emails],
                 "activity": [_serialize_activity(log) for log in activity],
             }
         )
@@ -584,7 +747,9 @@ def lead_detail(request, lead_id):
             "activity": activity,
             "email_form": EmailGenerateForm(),
             "call_form": CallOutcomeForm(agent=request.user),
-            "assignment_form": LeadAssignmentForm(initial={"assigned_to": lead.assigned_to}),
+            "assignment_form": LeadAssignmentForm(
+                initial={"assigned_to": lead.assigned_to}
+            ),
         },
     )
 
@@ -1076,12 +1241,16 @@ def _email_queryset_for_user(user):
 
 def _activity_queryset_for_user(user):
     if _is_admin(user):
-        return ActivityLog.objects.select_related("user", "lead").order_by("-created_at")
+        return ActivityLog.objects.select_related("user", "lead").order_by(
+            "-created_at"
+        )
 
     if _is_agent(user):
-        return ActivityLog.objects.select_related("user", "lead").filter(
-            lead__assigned_to=user
-        ).order_by("-created_at")
+        return (
+            ActivityLog.objects.select_related("user", "lead")
+            .filter(lead__assigned_to=user)
+            .order_by("-created_at")
+        )
 
     return ActivityLog.objects.none()
 

@@ -48,6 +48,8 @@ class Lead(models.Model):
         Campaign,
         on_delete=models.CASCADE,
         related_name="leads",
+        blank=True,
+        null=True,
     )
 
     assigned_to = models.ForeignKey(
@@ -59,14 +61,17 @@ class Lead(models.Model):
     )
 
     business_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=30, blank=True)
-    email = models.EmailField(blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    owner_name = models.CharField(max_length=255, blank=True)
+    phone = models.CharField(max_length=30, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    owner_name = models.CharField(max_length=255, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
 
-    business_type = models.CharField(max_length=100, default="Roofing")
-    score = models.CharField(max_length=20, blank=True)
-
+    business_type = models.CharField(max_length=100, null=True, blank=True)
+    score = models.CharField(max_length=20, blank=True, null=True)
+    num_of_reviews = models.CharField(max_length=20, blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
     tier = models.PositiveSmallIntegerField(
         choices=Tier.choices,
         default=Tier.WARM,
